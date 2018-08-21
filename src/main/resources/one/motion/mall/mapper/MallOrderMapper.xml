@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="one.motion.mall.mapper.MallOrderMapper">
+  <resultMap id="BaseResultMap" type="one.motion.mall.model.MallOrder">
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="uuid" jdbcType="CHAR" property="uuid" />
+    <result column="order_id" jdbcType="VARCHAR" property="orderId" />
+    <result column="user_id" jdbcType="BIGINT" property="userId" />
+    <result column="type" jdbcType="BIT" property="type" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="category_code" jdbcType="VARCHAR" property="categoryCode" />
+    <result column="product_id" jdbcType="VARCHAR" property="productId" />
+    <result column="amount" jdbcType="INTEGER" property="amount" />
+    <result column="price" jdbcType="DOUBLE" property="price" />
+    <result column="currency" jdbcType="CHAR" property="currency" />
+    <result column="discount" jdbcType="REAL" property="discount" />
+    <result column="mtn_amount" jdbcType="DOUBLE" property="mtnAmount" />
+    <result column="pay_type" jdbcType="BIT" property="payType" />
+    <result column="pay_status" jdbcType="BIT" property="payStatus" />
+    <result column="exchange_status" jdbcType="BIT" property="exchangeStatus" />
+    <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
+    <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
+    <result column="pay_result" jdbcType="LONGVARCHAR" property="payResult" />
+    <result column="exchange_result" jdbcType="LONGVARCHAR" property="exchangeResult" />
+  </resultMap>
+</mapper>
