@@ -1,0 +1,3 @@
+FROM mysql:5.7
+
+COPY ./src/main/db/migration/ /docker-entrypoint-initdb.d/

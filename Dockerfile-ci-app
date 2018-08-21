@@ -1,0 +1,7 @@
+FROM gradle:4.7-jdk8
+
+COPY . /home/gradle/project
+USER root
+RUN chown -R gradle /home/gradle/project
+
+USER gradle

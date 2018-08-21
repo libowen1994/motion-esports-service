@@ -1,0 +1,66 @@
+server:
+  port: 8080
+management:
+  server:
+    port: 9090
+grpc:
+  server:
+    port: 9898
+  client:
+    example:
+      host:
+      - 127.0.0.1
+      port:
+      - 9898
+      enableKeepAlive: true
+
+mybatis:
+  configuration:
+    map-underscore-to-camel-case: true
+  type-aliases-package: one.motion.mall.model
+  mapper-locations: classpath:one.motion.**.mapper/*.xml
+
+mapper:
+  mappers:
+  - tk.mybatis.mapper.common.Mapper
+  - tk.mybatis.mapper.common.MySqlMapper
+  not-empty: false
+  identity: MYSQL
+
+spring:
+  profiles:
+    active: dev
+  application:
+    name: motion-mall
+  messages:
+    basename: i18n/messages
+    encoding: UTF-8
+  redis:
+    host: ${REDIS_HOST:127.0.0.1}
+    port: 6379
+    password: ${REDIS_PASSWORD:}
+    jedis:
+      pool:
+        max-wait: 500ms
+        max-active: 8
+        min-idle: 1
+  datasource:
+    driver-class-name: com.mysql.jdbc.Driver
+    url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:3306/${DB_NAME:motion_mega_db}?useSSL=false&useUnicode=true&zeroDateTimeBehavior=convertToNull&characterEncoding=utf-8
+    username: ${DB_USER:root}
+    password: ${DB_PASSWORD:root}
+    hikari:
+      connection-test-query: SELECT 1
+      minimum-idle: 5
+      maximum-pool-size: 10
+      max-lifetime: 1800000
+      cachePrepStmts: true
+      prepStmtCacheSize: 250
+      prepStmtCacheSqlLimit: 2048
+      useServerPrepStmts: true
+      useLocalSessionState: true
+      rewriteBatchedStatements: true
+      cacheResultSetMetadata: true
+      cacheServerConfiguration: true
+      elideSetAutoCommits: true
+      maintainTimeStats: false

@@ -1,0 +1,32 @@
+version: "2"
+
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile-ci-app
+    command: sleep infinity
+    working_dir: /home/gradle/project
+    depends_on:
+      - maindb
+      - redis
+    environment:
+    - SPRING_PROFILES_ACTIVE=dev
+    - MYSQL_HOST=maindb
+    - DB_NAME=motion_portal_db
+    - DB_USER=www
+    - DB_PASSWORD=wwwpwd
+    - REDIS_HOST=redis
+
+  maindb:
+    build:
+      context: .
+      dockerfile: Dockerfile-ci-mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=root1234
+      - MYSQL_DATABASE=motion_portal_db
+      - MYSQL_USER=www
+      - MYSQL_PASSWORD=wwwpwd
+
+  redis:
+    image: redis:3-alpine

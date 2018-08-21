@@ -1,0 +1,128 @@
+buildscript {
+    ext {
+        springBootVersion = '2.0.3.RELEASE'
+        grpcVersion = '1.13.1'
+    }
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath "net.saliman:gradle-cobertura-plugin:2.5.4"
+        classpath("com.google.protobuf:protobuf-gradle-plugin:0.8.6")
+    }
+}
+
+apply plugin: 'java'
+apply plugin: 'eclipse'
+apply plugin: 'idea'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+apply plugin: 'net.saliman.cobertura'
+apply plugin: 'com.google.protobuf'
+
+group = 'one.motion.services'
+version = '1.0.0'
+sourceCompatibility = 1.8
+
+repositories {
+    mavenCentral()
+}
+
+sourceSets {
+    //Declaring this source set creates compile time and runtime configurations for it.
+    integrationTest {
+        java {
+            compileClasspath += main.output + test.output
+            runtimeClasspath += main.output + test.output
+            srcDir file('src/integ-test/java')
+        }
+        resources.srcDir file('src/integ-test/resources')
+    }
+}
+
+cobertura {
+    coverageFormats = ["html", "xml"]
+    coverageIgnoreTrivial = true
+    coverageCheckTotalLineRate = 70
+}
+
+configurations {
+    mybatisGenerator
+    integrationTestCompile.extendsFrom testCompile
+    integrationTestRuntime.extendsFrom testRuntime
+}
+dependencies {
+    mybatisGenerator('org.mybatis.generator:mybatis-generator-core:+')
+    mybatisGenerator('mysql:mysql-connector-java:5.+')
+    mybatisGenerator('tk.mybatis:mapper:+')
+    compile('org.springframework.boot:spring-boot-starter-actuator')
+    compile('org.springframework.boot:spring-boot-starter-web')
+    compile('org.springframework.boot:spring-boot-starter-cache')
+    compile('org.springframework.boot:spring-boot-starter-data-redis')
+    compile('org.springframework.boot:spring-boot-starter-validation')
+    compile("net.devh:grpc-server-spring-boot-starter:1.4.1.RELEASE")
+    compile("net.devh:grpc-client-spring-boot-starter:1.4.1.RELEASE")
+    compile("io.grpc:grpc-netty:${grpcVersion}")
+    compile("io.grpc:grpc-protobuf:${grpcVersion}")
+    compile("io.grpc:grpc-stub:${grpcVersion}")
+    compile('org.mybatis.spring.boot:mybatis-spring-boot-starter:1.3.2')
+    compile('tk.mybatis:mapper-spring-boot-starter:2.0.3')
+    compile('com.google.guava:guava:25.1-jre')
+    compile('com.alibaba:fastjson:1.2.47')
+    compile('commons-io:commons-io:2.6')
+    compile('org.apache.commons:commons-lang3:3.7')
+    runtime('org.springframework.boot:spring-boot-devtools')
+    runtime('mysql:mysql-connector-java')
+    testCompile('org.springframework.boot:spring-boot-starter-test')
+}
+protobuf {
+    protoc {
+        artifact = "com.google.protobuf:protoc:3.5.1-1"
+    }
+    plugins {
+        grpc {
+            artifact = "io.grpc:protoc-gen-grpc-java:${grpcVersion}"
+        }
+    }
+    generateProtoTasks {
+        all()*.plugins {
+            grpc {}
+        }
+    }
+}
+
+task mybatisGenerate {
+    doLast {
+        ant.properties['targetProject'] = projectDir.path
+        ant.properties['src_main_java'] = sourceSets.main.java.srcDirs[0].path
+        ant.properties['src_main_resources'] = sourceSets.main.resources.srcDirs[0].path
+        ant.taskdef(
+                name: 'mbgenerator',
+                classname: 'org.mybatis.generator.ant.GeneratorAntTask',
+                classpath: configurations.mybatisGenerator.asPath
+        )
+        ant.mbgenerator(overwrite: true,
+                configfile: 'generator.xml', verbose: true) {
+            propertyset {
+                propertyref(name: 'targetProject')
+                propertyref(name: 'src_main_java')
+                propertyref(name: 'src_main_resources')
+            }
+        }
+    }
+}
+//Create the task that runs the integration tests found from the
+//configured source directory and uses the correct classpath.
+task integrationTest(type: Test) {
+    testClassesDirs = sourceSets.integrationTest.output.classesDirs
+    classpath = sourceSets.integrationTest.runtimeClasspath
+    //If you want to ensure that integration tests are run every time when you invoke
+    //this task, uncomment the following line.
+    //outputs.upToDateWhen { false }
+}
+
+//Ensure that the check task fails the build if there are failing integration tests.
+check.dependsOn integrationTest
+//Ensure that our unit tests are run before our integration tests
+integrationTest.mustRunAfter test
