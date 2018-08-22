@@ -1,0 +1,22 @@
+syntax = "proto3";
+ 
+option java_package = "one.motion.proto.wallet.model";
+
+option java_multiple_files = true;
+
+
+import "wallet/result_code.proto";
+
+message TransMsgProto { //交易單信息
+    uint64 userId = 1; // 发起交易用户ID，必填
+    uint64 sendTo = 2; //交易收款方用户ID，必填
+    string amount = 3;  //交易数额，必填
+    string orderId = 4;  //商场订单号，必填
+    int32 transType = 5;  //交易类型，必填
+
+}
+
+message TransResultProto {  //交易結果
+     ResultCodeProto  resultCode = 1; //200為成功
+     string resultMsg = 2;
+}

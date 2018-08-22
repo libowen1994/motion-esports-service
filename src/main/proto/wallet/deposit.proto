@@ -1,0 +1,26 @@
+syntax = "proto3";
+ 
+option java_package = "one.motion.proto.wallet.model";
+
+option java_multiple_files = true;
+
+
+import "wallet/result_code.proto";
+
+message DepositMsgProto { //存單信息
+    string sourceUuid = 1; // 存单来源uuid,必填
+    uint64 userId = 2; //用户账号所属id，必填
+    string mtn = 3;  //存入的mtn币值，必填
+    int32 type = 4;  //交易类型（1信用卡，2社群挖矿，3交易所储值），必填
+    string lockDate = 5;  //锁定截止日(格式：yyyy-MM-dd)，可选
+    string  remark = 6; //备注信息，可保存来源信用卡号信息或挖矿信息(字串长度不超80)，可选
+
+}
+
+message DepositResultProto {  //mtn存入結果
+     string sourceUuid = 1; //存单来源uuid
+     uint64 userId = 2; //用户账号所属id
+     string mtn = 3;  //存入的mtn币值
+     ResultCodeProto  resultCode = 4; //200為成功，其他为错误
+     string resultMsg = 5;
+}

@@ -1,0 +1,18 @@
+syntax = "proto3";
+ 
+option java_package = "one.motion.proto.wallet.model";
+
+option java_multiple_files = true;
+
+
+import "wallet/result_code.proto";
+
+message CheckApiMsgProto { //檢查grpc連結的api
+    string checkTime = 1; // 檢查時間
+    string from = 2; //請求來源名稱
+
+}
+
+message CheckApiResultProto {  //檢查結果
+     ResultCodeProto  resultCode = 4; //200為成功，其他为错误
+}

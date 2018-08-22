@@ -32,7 +32,7 @@ public class MallOrder {
     /**
      * 商品类型：1,树鱼直充；2，树鱼卡密；3，自定义
      */
-    private Boolean type;
+    private Byte type;
 
     /**
      * 名字
@@ -81,19 +81,19 @@ public class MallOrder {
      * 付款方式(1法币付款，2mtn付款)
      */
     @Column(name = "pay_type")
-    private Boolean payType;
+    private Byte payType;
 
     /**
      * 订单付款状态：1未付款、2已付款、3已退款, 4付款失败，5已取消
      */
     @Column(name = "pay_status")
-    private Boolean payStatus;
+    private Byte payStatus;
 
     /**
      * 订单状态：1未兑换，2兑换进行中，2已兌換成功，3兑换失败
      */
     @Column(name = "exchange_status")
-    private Boolean exchangeStatus;
+    private Byte exchangeStatus;
 
     @Column(name = "created_at")
     private Date createdAt;
@@ -190,7 +190,7 @@ public class MallOrder {
      *
      * @return type - 商品类型：1,树鱼直充；2，树鱼卡密；3，自定义
      */
-    public Boolean getType() {
+    public Byte getType() {
         return type;
     }
 
@@ -199,7 +199,7 @@ public class MallOrder {
      *
      * @param type 商品类型：1,树鱼直充；2，树鱼卡密；3，自定义
      */
-    public void setType(Boolean type) {
+    public void setType(Byte type) {
         this.type = type;
     }
 
@@ -352,7 +352,7 @@ public class MallOrder {
      *
      * @return pay_type - 付款方式(1法币付款，2mtn付款)
      */
-    public Boolean getPayType() {
+    public Byte getPayType() {
         return payType;
     }
 
@@ -361,7 +361,7 @@ public class MallOrder {
      *
      * @param payType 付款方式(1法币付款，2mtn付款)
      */
-    public void setPayType(Boolean payType) {
+    public void setPayType(Byte payType) {
         this.payType = payType;
     }
 
@@ -370,7 +370,7 @@ public class MallOrder {
      *
      * @return pay_status - 订单付款状态：1未付款、2已付款、3已退款, 4付款失败，5已取消
      */
-    public Boolean getPayStatus() {
+    public Byte getPayStatus() {
         return payStatus;
     }
 
@@ -379,7 +379,7 @@ public class MallOrder {
      *
      * @param payStatus 订单付款状态：1未付款、2已付款、3已退款, 4付款失败，5已取消
      */
-    public void setPayStatus(Boolean payStatus) {
+    public void setPayStatus(Byte payStatus) {
         this.payStatus = payStatus;
     }
 
@@ -388,7 +388,7 @@ public class MallOrder {
      *
      * @return exchange_status - 订单状态：1未兑换，2兑换进行中，2已兌換成功，3兑换失败
      */
-    public Boolean getExchangeStatus() {
+    public Byte getExchangeStatus() {
         return exchangeStatus;
     }
 
@@ -397,7 +397,7 @@ public class MallOrder {
      *
      * @param exchangeStatus 订单状态：1未兑换，2兑换进行中，2已兌換成功，3兑换失败
      */
-    public void setExchangeStatus(Boolean exchangeStatus) {
+    public void setExchangeStatus(Byte exchangeStatus) {
         this.exchangeStatus = exchangeStatus;
     }
 

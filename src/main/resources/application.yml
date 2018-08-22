@@ -4,14 +4,12 @@ management:
   server:
     port: 9090
 grpc:
-  server:
-    port: 9898
   client:
-    example:
+    wallet-service:
       host:
-      - 127.0.0.1
+        - ${MOTION_WALLET_SERVICE_ADDR:127.0.0.1}
       port:
-      - 9898
+        - 9898
       enableKeepAlive: true
 
 mybatis:

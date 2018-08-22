@@ -26,7 +26,7 @@ public class MallProduct {
     /**
      * 1,树鱼直充；2，树鱼卡密；3，自定义
      */
-    private Boolean type;
+    private Byte type;
 
     /**
      * 名字
@@ -74,7 +74,7 @@ public class MallProduct {
     /**
      * 启用/禁用
      */
-    private Boolean enabled;
+    private Byte enabled;
 
     @Column(name = "created_at")
     private Date createdAt;
@@ -146,7 +146,7 @@ public class MallProduct {
      *
      * @return type - 1,树鱼直充；2，树鱼卡密；3，自定义
      */
-    public Boolean getType() {
+    public Byte getType() {
         return type;
     }
 
@@ -155,7 +155,7 @@ public class MallProduct {
      *
      * @param type 1,树鱼直充；2，树鱼卡密；3，自定义
      */
-    public void setType(Boolean type) {
+    public void setType(Byte type) {
         this.type = type;
     }
 
@@ -308,7 +308,7 @@ public class MallProduct {
      *
      * @return enabled - 启用/禁用
      */
-    public Boolean getEnabled() {
+    public Byte getEnabled() {
         return enabled;
     }
 
@@ -317,7 +317,7 @@ public class MallProduct {
      *
      * @param enabled 启用/禁用
      */
-    public void setEnabled(Boolean enabled) {
+    public void setEnabled(Byte enabled) {
         this.enabled = enabled;
     }
 

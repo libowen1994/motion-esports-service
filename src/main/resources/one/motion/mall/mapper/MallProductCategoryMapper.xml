@@ -7,11 +7,11 @@
     -->
     <id column="id" jdbcType="BIGINT" property="id" />
     <result column="uuid" jdbcType="CHAR" property="uuid" />
-    <result column="type" jdbcType="BIT" property="type" />
+    <result column="type" jdbcType="TINYINT" property="type" />
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="category_code" jdbcType="VARCHAR" property="categoryCode" />
     <result column="sort" jdbcType="BIGINT" property="sort" />
-    <result column="enabled" jdbcType="BIT" property="enabled" />
+    <result column="enabled" jdbcType="TINYINT" property="enabled" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
     <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
   </resultMap>
