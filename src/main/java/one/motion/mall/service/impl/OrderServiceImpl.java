@@ -1,6 +1,8 @@
 package one.motion.mall.service.impl;
 
+import one.motion.mall.dto.ExchangeStatus;
 import one.motion.mall.dto.PayType;
+import one.motion.mall.dto.PaymentStatus;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.mapper.MallProductCategoryMapper;
 import one.motion.mall.mapper.MallProductMapper;
@@ -49,6 +51,18 @@ public class OrderServiceImpl implements IOrderService {
 
     @Override
     public String newOrder(Long userId, String productId, Integer amount, PayType payType) {
+        if (userId == null) {
+            throw new RuntimeException("unknown_userId_error");
+        }
+        if (productId == null) {
+            throw new RuntimeException("unknown_productId_error");
+        }
+        if (amount == null) {
+            throw new RuntimeException("unknown_amount_error");
+        }
+        if (payType == null) {
+            throw new RuntimeException("unknown_payType_error");
+        }
         MallProduct product = new MallProduct();
         product.setProductId(productId);
         product = productMapper.selectOne(product);
@@ -65,13 +79,21 @@ public class OrderServiceImpl implements IOrderService {
         order.setDiscount(product.getDiscount());
         order.setProductId(product.getProductId());
         order.setName(product.getName());
+        order.setPayType(payType.getCode().byteValue());
         BigDecimal total = BigDecimal.valueOf(amount).multiply(BigDecimal.valueOf(product.getPrice()));
+        if (product.getDiscount() != null) {
+            total = total.multiply(BigDecimal.valueOf(product.getDiscount()));
+        }
         BigDecimal mtn = paymentService.getMtnValue(total, product.getCurrency());
         order.setMtnAmount(mtn.doubleValue());
         order.setType(product.getType());
         order.setUserId(userId);
         order.setUuid(UUID.randomUUID().toString());
-        return null;
+        order.setPayStatus(PaymentStatus.UNPAID.getCode().byteValue());
+        order.setExchangeStatus(ExchangeStatus.NOT_EXCHANGED.getCode().byteValue());
+        orderMapper.insertSelective(order);
+        logger.info("Order [{}] is created", orderId);
+        return orderId;
     }
 
     @Override
