@@ -17,4 +17,17 @@ public enum ProductType {
     public String toString() {
         return String.valueOf(this.code);
     }
+
+    public static ProductType valueOf(int code) {
+        switch (code) {
+            case 1:
+                return S_DIRECT_CHARGE;
+            case 2:
+                return S_CARD;
+            case 3:
+                return M_CUSTOM;
+            default:
+                return null;
+        }
+    }
 }

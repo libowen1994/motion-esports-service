@@ -17,4 +17,15 @@ public enum PayType {
     public String toString() {
         return String.valueOf(this.code);
     }
+
+    public static PayType valueOf(int code) {
+        switch (code) {
+            case 1:
+                return CASH;
+            case 2:
+                return MTN;
+            default:
+                return null;
+        }
+    }
 }

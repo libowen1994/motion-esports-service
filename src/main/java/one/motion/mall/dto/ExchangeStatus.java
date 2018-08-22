@@ -17,4 +17,19 @@ public enum ExchangeStatus {
     public String toString() {
         return String.valueOf(this.code);
     }
+
+    public static ExchangeStatus valueOf(int code) {
+        switch (code) {
+            case 1:
+                return NOT_EXCHANGED;
+            case 2:
+                return EXCHANGING;
+            case 3:
+                return EXCHANGED;
+            case 4:
+                return EXCHANGE_FAIL;
+            default:
+                return null;
+        }
+    }
 }

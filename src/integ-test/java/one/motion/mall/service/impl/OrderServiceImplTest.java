@@ -1,9 +1,7 @@
 package one.motion.mall.service.impl;
 
-import one.motion.mall.dto.Currency;
-import one.motion.mall.dto.EnabledStatus;
-import one.motion.mall.dto.PayType;
-import one.motion.mall.dto.ProductType;
+import com.alibaba.fastjson.JSONObject;
+import one.motion.mall.dto.*;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.mapper.MallProductMapper;
 import one.motion.mall.model.MallOrder;
@@ -72,7 +70,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
     @Test
     public void newOrder() {
         when(mockPaymentService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
-        String orderId = orderService.newOrder(380L, "12345", 1, PayType.MTN);
+        String orderId = orderService.checkout(380L, "12345", 1, PayType.MTN);
         Assert.assertNotNull(orderId);
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
@@ -84,6 +82,21 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
 
     @Test
     public void paymentFinished() {
+        when(mockPaymentService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
+        JSONObject result = new JSONObject();
+        result.put("code", 200);
+        result.put("message", "success");
+        when(mockPaymentService.pay(Mockito.anyString(), Mockito.any(), Mockito.any())).thenReturn(result);
+
+        String orderId = orderService.checkout(380L, "12345", 1, PayType.MTN);
+        orderService.submit(orderId);
+        MallOrder order = new MallOrder();
+        order.setOrderId(orderId);
+        order = orderMapper.selectOne(order);
+        Assert.assertNotNull(order);
+        Assert.assertEquals(order.getUserId(), Long.valueOf(380L));
+        Assert.assertEquals(order.getMtnAmount(), 12.34);
+        Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.PAID.getCode().byteValue());
     }
 
     @Test

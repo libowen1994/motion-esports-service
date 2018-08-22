@@ -1,5 +1,7 @@
 package one.motion.mall.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
+import one.motion.mall.dto.Currency;
 import one.motion.mall.dto.ExchangeStatus;
 import one.motion.mall.dto.PayType;
 import one.motion.mall.dto.PaymentStatus;
@@ -50,7 +52,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public String newOrder(Long userId, String productId, Integer amount, PayType payType) {
+    public String checkout(Long userId, String productId, Integer amount, PayType payType) {
         if (userId == null) {
             throw new RuntimeException("unknown_userId_error");
         }
@@ -96,14 +98,70 @@ public class OrderServiceImpl implements IOrderService {
         return orderId;
     }
 
-    @Override
-    public MallOrder paymentFinished(String orderId, boolean status, String code, String message) {
-        return null;
+    private MallOrder paymentFinished(MallOrder order, PaymentStatus status, JSONObject data) {
+        PaymentStatus orderStatus = PaymentStatus.valueOf(order.getPayStatus());
+        if (orderStatus == null) {
+            throw new RuntimeException("unknown_order_status_error");
+        }
+        if (orderStatus != PaymentStatus.UNPAID && status == PaymentStatus.IN_PAY) {
+            throw new RuntimeException("order_payment_status_error");
+        }
+        if ((orderStatus != PaymentStatus.IN_PAY && orderStatus != PaymentStatus.PAY_FAIL) && status == PaymentStatus.PAID) {
+            throw new RuntimeException("order_payment_status_error");
+        }
+        if (orderStatus != PaymentStatus.IN_PAY && status == PaymentStatus.PAY_FAIL) {
+            throw new RuntimeException("order_payment_status_error");
+        }
+        if (orderStatus != PaymentStatus.PAID && status == PaymentStatus.REFUND) {
+            throw new RuntimeException("order_payment_status_error");
+        }
+        if (orderStatus != PaymentStatus.UNPAID && status == PaymentStatus.CANCELED) {
+            throw new RuntimeException("order_payment_status_error");
+        }
+        order.setPayStatus(status.getCode().byteValue());
+        if (data != null) {
+            order.setPayResult(data.toJSONString());
+        }
+        orderMapper.updateByPrimaryKeySelective(order);
+        return order;
+    }
+
+    private MallOrder exchangeFinished(MallOrder order, ExchangeStatus status, JSONObject data) {
+        ExchangeStatus orderExchangeStatus = ExchangeStatus.valueOf(order.getExchangeStatus());
+        if (orderExchangeStatus == null) {
+            throw new RuntimeException("unknown_order_exchange_status_error");
+        }
+        if (orderExchangeStatus != ExchangeStatus.NOT_EXCHANGED && status == ExchangeStatus.EXCHANGING) {
+            throw new RuntimeException("order_exchange_status_error");
+        }
+        if (orderExchangeStatus != ExchangeStatus.EXCHANGING && status == ExchangeStatus.EXCHANGE_FAIL) {
+            throw new RuntimeException("order_exchange_status_error");
+        }
+        if (orderExchangeStatus != ExchangeStatus.EXCHANGING && status == ExchangeStatus.EXCHANGED) {
+            throw new RuntimeException("order_exchange_status_error");
+        }
+        order.setExchangeStatus(status.getCode().byteValue());
+        if (data != null) {
+            order.setExchangeResult(data.toJSONString());
+        }
+        orderMapper.updateByPrimaryKeySelective(order);
+        return order;
     }
 
     @Override
-    public MallOrder exchangeFinished(String orderId, boolean status, String code, String message) {
-        return null;
+    public MallOrder submit(String orderId) {
+        MallOrder order = new MallOrder();
+        order.setOrderId(orderId);
+        order = orderMapper.selectOne(order);
+        if (order == null) {
+            throw new RuntimeException("unknown_order_error");
+        }
+        paymentFinished(order, PaymentStatus.IN_PAY, null);
+        if (PayType.valueOf(order.getPayType()) == PayType.MTN) {
+            JSONObject json = paymentService.pay(order.getOrderId(), BigDecimal.valueOf(order.getMtnAmount()), Currency.MTN);
+            order = paymentFinished(order, PaymentStatus.PAID, json);
+        }
+        return order;
     }
 
     @Override
