@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import io.grpc.Channel;
 import net.devh.springboot.autoconfigure.grpc.client.GrpcClient;
 import one.motion.mall.dto.Currency;
+import one.motion.mall.dto.PaymentStatus;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.model.MallOrder;
 import one.motion.mall.service.IPaymentService;
@@ -38,21 +39,26 @@ public class PaymentServiceImpl implements IPaymentService {
     private String walletAddress;
 
     @Override
-    public boolean pay(String orderId, BigDecimal amount, Currency currency) {
+    public JSONObject pay(String orderId, BigDecimal amount, Currency currency) {
+        JSONObject jsonObject = new JSONObject();
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
-        if (order == null) {
-            return false;
+        if (order == null || order.getPayStatus() == null || !order.getPayStatus().equals(PaymentStatus.UNPAID.getCode().byteValue())) {
+            jsonObject.put("code", "400");
+            jsonObject.put("message", "order_not_exists");
+            return jsonObject;
         }
         switch (currency) {
-            case MTN:
+            case MTN: {
                 return payWithMTN(order.getOrderId(), new BigDecimal(order.getMtnAmount()), order.getUserId());
+
+            }
         }
-        return false;
+        return jsonObject;
     }
 
-    private boolean payWithMTN(String orderId, BigDecimal amount, Long userId) {
+    private JSONObject payWithMTN(String orderId, BigDecimal amount, Long userId) {
         MtnServiceGrpc.MtnServiceBlockingStub stub = MtnServiceGrpc.newBlockingStub(walletServiceChannel);
         ExpendMsgProto request = ExpendMsgProto.newBuilder()
                 .setMtn(amount.toString())
@@ -65,7 +71,10 @@ public class PaymentServiceImpl implements IPaymentService {
         int code = result.getResultCode().getNumber();
         String message = result.getResultMsg();
         logger.info("Send transaction result: {}:{}, {}", code, codeName, message);
-        return code == 200;
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code", code);
+        jsonObject.put("message", message);
+        return jsonObject;
     }
 
     public BigDecimal getMtnValue(BigDecimal amount, String currency) {

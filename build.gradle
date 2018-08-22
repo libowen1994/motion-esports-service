@@ -75,6 +75,7 @@ dependencies {
     runtime('org.springframework.boot:spring-boot-devtools')
     runtime('mysql:mysql-connector-java')
     testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile('org.testng:testng:6.8.13')
 }
 protobuf {
     protoc {
@@ -115,6 +116,7 @@ task mybatisGenerate {
 //Create the task that runs the integration tests found from the
 //configured source directory and uses the correct classpath.
 task integrationTest(type: Test) {
+    useTestNG()
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     //If you want to ensure that integration tests are run every time when you invoke
