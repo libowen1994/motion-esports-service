@@ -48,7 +48,7 @@ pipeline {
                         sh 'sleep 15s'
                         sh 'docker-compose -f docker-compose.ci.yaml exec -T app gradle --no-daemon clean integrationTest'
                     } finally {
-                        sh 'docker-compose down'
+                        sh 'docker-compose -f docker-compose.ci.yaml down'
                     }
                 }
             }
