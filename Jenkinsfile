@@ -26,7 +26,7 @@ pipeline {
                     def gitMyCount = sh(script:'git rev-list --count HEAD', returnStdout: true).trim()
                     def gitMyHash = sh(script:'git rev-parse --short HEAD', returnStdout: true).trim()
                     buildTag = env.BRANCH_NAME + "." + gitMyCount + "." + gitMyHash
-                    sh "./gradlew clean build"
+                    sh "./gradlew clean build -x integrationTest"
                 }
             }
         }
