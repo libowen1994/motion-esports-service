@@ -61,7 +61,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-cache')
     compile('org.springframework.boot:spring-boot-starter-data-redis')
     compile('org.springframework.boot:spring-boot-starter-validation')
-    compile("net.devh:grpc-server-spring-boot-starter:1.4.1.RELEASE")
+    //compile("net.devh:grpc-server-spring-boot-starter:1.4.1.RELEASE")
     compile("net.devh:grpc-client-spring-boot-starter:1.4.1.RELEASE")
     compile("io.grpc:grpc-netty:${grpcVersion}")
     compile("io.grpc:grpc-protobuf:${grpcVersion}")

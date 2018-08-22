@@ -34,7 +34,7 @@ public class PaymentServiceImpl implements IPaymentService {
     @GrpcClient("wallet-service")
     private Channel walletServiceChannel;
 
-    @Value("${MOTION_WALLET_SERVICE_ADDR}")
+    @Value("${MOTION_WALLET_SERVICE_ADDR:}")
     private String walletAddress;
 
     @Override

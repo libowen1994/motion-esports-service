@@ -5,7 +5,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import tk.mybatis.spring.annotation.MapperScan;
 
 @SpringBootApplication
-@MapperScan(basePackages = "one.motion.game.mapper")
+@MapperScan(basePackages = "one.motion.mall.mapper")
 public class MotionApplication {
 
     public static void main(String[] args) {
