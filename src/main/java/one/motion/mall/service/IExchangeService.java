@@ -1,5 +1,7 @@
 package one.motion.mall.service;
 
+import com.alibaba.fastjson.JSONObject;
+
 public interface IExchangeService {
-    boolean exchange(String orderId);
+    JSONObject exchange(String orderId);
 }

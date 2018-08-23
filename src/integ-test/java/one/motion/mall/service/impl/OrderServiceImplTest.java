@@ -68,7 +68,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
     }
 
     @Test
-    public void newOrder() {
+    public void testMtnBuy() {
         when(mockPaymentService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
         String orderId = orderService.checkout(380L, "12345", 1, PayType.MTN);
         Assert.assertNotNull(orderId);
@@ -78,36 +78,13 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         Assert.assertNotNull(order);
         Assert.assertEquals(order.getUserId(), Long.valueOf(380L));
         Assert.assertEquals(order.getMtnAmount(), 12.34);
-    }
-
-    @Test
-    public void paymentFinished() {
-        when(mockPaymentService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
         JSONObject result = new JSONObject();
         result.put("code", 200);
         result.put("message", "success");
-        when(mockPaymentService.pay(Mockito.anyString(), Mockito.any(), Mockito.any())).thenReturn(result);
-
-        String orderId = orderService.checkout(380L, "12345", 1, PayType.MTN);
-        orderService.submit(orderId);
-        MallOrder order = new MallOrder();
-        order.setOrderId(orderId);
-        order = orderMapper.selectOne(order);
+        when(mockPaymentService.mtnPay(Mockito.anyString(), Mockito.any(), Mockito.any())).thenReturn(result);
+        order = orderService.submit(orderId);
         Assert.assertNotNull(order);
-        Assert.assertEquals(order.getUserId(), Long.valueOf(380L));
-        Assert.assertEquals(order.getMtnAmount(), 12.34);
         Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.PAID.getCode().byteValue());
-    }
-
-    @Test
-    public void exchangeFinished() {
-    }
-
-    @Test
-    public void refund() {
-    }
-
-    @Test
-    public void cancel() {
+        Assert.assertEquals(order.getExchangeStatus(), (Byte) ExchangeStatus.EXCHANGED.getCode().byteValue());
     }
 }

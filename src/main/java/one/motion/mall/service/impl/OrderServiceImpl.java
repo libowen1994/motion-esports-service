@@ -10,8 +10,10 @@ import one.motion.mall.mapper.MallProductCategoryMapper;
 import one.motion.mall.mapper.MallProductMapper;
 import one.motion.mall.model.MallOrder;
 import one.motion.mall.model.MallProduct;
+import one.motion.mall.service.IExchangeService;
 import one.motion.mall.service.IOrderService;
 import one.motion.mall.service.IPaymentService;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,12 +34,14 @@ public class OrderServiceImpl implements IOrderService {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     private final IPaymentService paymentService;
+    private final IExchangeService exchangeService;
 
-    public OrderServiceImpl(MallOrderMapper orderMapper, MallProductMapper productMapper, MallProductCategoryMapper productCategoryMapper, RestTemplate restTemplate, IPaymentService paymentService) {
+    public OrderServiceImpl(MallOrderMapper orderMapper, MallProductMapper productMapper, MallProductCategoryMapper productCategoryMapper, RestTemplate restTemplate, IPaymentService paymentService, IExchangeService exchangeService) {
         this.orderMapper = orderMapper;
         this.productMapper = productMapper;
         this.productCategoryMapper = productCategoryMapper;
         this.paymentService = paymentService;
+        this.exchangeService = exchangeService;
     }
 
     private String getOrderNo(Long userId, Date date) {
@@ -156,10 +160,30 @@ public class OrderServiceImpl implements IOrderService {
         if (order == null) {
             throw new RuntimeException("unknown_order_error");
         }
-        paymentFinished(order, PaymentStatus.IN_PAY, null);
         if (PayType.valueOf(order.getPayType()) == PayType.MTN) {
-            JSONObject json = paymentService.pay(order.getOrderId(), BigDecimal.valueOf(order.getMtnAmount()), Currency.MTN);
-            order = paymentFinished(order, PaymentStatus.PAID, json);
+            paymentFinished(order, PaymentStatus.IN_PAY, null);
+            JSONObject json = paymentService.mtnPay(order.getOrderId(), BigDecimal.valueOf(order.getMtnAmount()), Currency.MTN);
+            if (json != null && StringUtils.equals("200", json.getString("code"))) {
+                order = paymentFinished(order, PaymentStatus.PAID, json);
+            } else {
+                order = paymentFinished(order, PaymentStatus.PAY_FAIL, json);
+            }
+            JSONObject exchangeResult = exchangeService.exchange(orderId);
+            exchangeFinished(order, ExchangeStatus.EXCHANGING, null);
+            if (exchangeResult != null && StringUtils.equals("200", exchangeResult.getString("code"))) {
+                order = exchangeFinished(order, ExchangeStatus.EXCHANGED, exchangeResult);
+            } else {
+                order = exchangeFinished(order, ExchangeStatus.EXCHANGE_FAIL, exchangeResult);
+            }
+
+        }
+        if (PayType.valueOf(order.getPayType()) == PayType.CASH) {
+            JSONObject json = paymentService.ipsPay(order.getOrderId(), BigDecimal.valueOf(order.getMtnAmount()), Currency.MTN);
+            if (json != null && StringUtils.equals("200", json.getString("code"))) {
+                paymentFinished(order, PaymentStatus.IN_PAY, json);
+            } else {
+                order = paymentFinished(order, PaymentStatus.PAY_FAIL, json);
+            }
         }
         return order;
     }

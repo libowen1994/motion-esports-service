@@ -7,7 +7,9 @@ import java.math.BigDecimal;
 
 public interface IPaymentService {
 
-    JSONObject pay(String orderId, BigDecimal amount, Currency currency);
+    JSONObject mtnPay(String orderId, BigDecimal amount, Currency currency);
+
+    JSONObject ipsPay(String orderId, BigDecimal amount, Currency currency);
 
     BigDecimal getMtnValue(BigDecimal amount, String currency);
 

@@ -7,7 +7,6 @@ import org.testng.annotations.Test;
 @SpringBootTest
 public class MotionApplicationTests extends AbstractTestNGSpringContextTests {
 
-
     @Test
     public void contextLoads() {
     }

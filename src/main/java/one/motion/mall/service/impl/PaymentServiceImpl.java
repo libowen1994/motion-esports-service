@@ -39,7 +39,7 @@ public class PaymentServiceImpl implements IPaymentService {
     private String walletAddress;
 
     @Override
-    public JSONObject pay(String orderId, BigDecimal amount, Currency currency) {
+    public JSONObject mtnPay(String orderId, BigDecimal amount, Currency currency) {
         JSONObject jsonObject = new JSONObject();
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
@@ -55,6 +55,14 @@ public class PaymentServiceImpl implements IPaymentService {
 
             }
         }
+        return jsonObject;
+    }
+
+    @Override
+    public JSONObject ipsPay(String orderId, BigDecimal amount, Currency currency) {
+        JSONObject jsonObject = new JSONObject();
+        jsonObject.put("code", 200);
+        jsonObject.put("message", "QRCode");
         return jsonObject;
     }
 
@@ -77,6 +85,7 @@ public class PaymentServiceImpl implements IPaymentService {
         return jsonObject;
     }
 
+    @Override
     public BigDecimal getMtnValue(BigDecimal amount, String currency) {
         try {
             String url = "http://" + walletAddress + ":8080/oapi/v1/wallet/exchange?amount=" + amount + "&currency" + currency;
