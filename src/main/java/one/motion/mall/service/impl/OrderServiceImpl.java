@@ -1,10 +1,7 @@
 package one.motion.mall.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import one.motion.mall.dto.Currency;
-import one.motion.mall.dto.ExchangeStatus;
-import one.motion.mall.dto.PayType;
-import one.motion.mall.dto.PaymentStatus;
+import one.motion.mall.dto.*;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.mapper.MallProductCategoryMapper;
 import one.motion.mall.mapper.MallProductMapper;
@@ -102,8 +99,12 @@ public class OrderServiceImpl implements IOrderService {
         return orderId;
     }
 
-    private MallOrder paymentFinished(MallOrder order, PaymentStatus status, JSONObject data) {
+    private MallOrder paymentFinished(MallOrder order, PaymentResult paymentResult) {
         PaymentStatus orderStatus = PaymentStatus.valueOf(order.getPayStatus());
+        PaymentStatus status = paymentResult.getStatus();
+        if (orderStatus == status) {
+            return order;
+        }
         if (orderStatus == null) {
             throw new RuntimeException("unknown_order_status_error");
         }
@@ -123,15 +124,19 @@ public class OrderServiceImpl implements IOrderService {
             throw new RuntimeException("order_payment_status_error");
         }
         order.setPayStatus(status.getCode().byteValue());
-        if (data != null) {
-            order.setPayResult(data.toJSONString());
-        }
+        order.setPayResult(StringUtils.defaultIfBlank(paymentResult.getResultCode(), "") + "_" + StringUtils.defaultIfBlank(paymentResult.getResultMessage(), ""));
+        order.setCreatedAt(null);
+        order.setUpdatedAt(null);
         orderMapper.updateByPrimaryKeySelective(order);
         return order;
     }
 
-    private MallOrder exchangeFinished(MallOrder order, ExchangeStatus status, JSONObject data) {
+    private MallOrder exchangeFinished(MallOrder order, ExchangeResult exchangeResult) {
         ExchangeStatus orderExchangeStatus = ExchangeStatus.valueOf(order.getExchangeStatus());
+        ExchangeStatus status = exchangeResult.getStatus();
+        if (orderExchangeStatus == status) {
+            return order;
+        }
         if (orderExchangeStatus == null) {
             throw new RuntimeException("unknown_order_exchange_status_error");
         }
@@ -145,9 +150,9 @@ public class OrderServiceImpl implements IOrderService {
             throw new RuntimeException("order_exchange_status_error");
         }
         order.setExchangeStatus(status.getCode().byteValue());
-        if (data != null) {
-            order.setExchangeResult(data.toJSONString());
-        }
+        order.setExchangeResult(StringUtils.defaultIfBlank(exchangeResult.getResultCode(), "") + "_" + StringUtils.defaultIfBlank(exchangeResult.getResultMessage(), ""));
+        order.setCreatedAt(null);
+        order.setUpdatedAt(null);
         orderMapper.updateByPrimaryKeySelective(order);
         return order;
     }
@@ -161,40 +166,125 @@ public class OrderServiceImpl implements IOrderService {
             throw new RuntimeException("unknown_order_error");
         }
         if (PayType.valueOf(order.getPayType()) == PayType.MTN) {
-            paymentFinished(order, PaymentStatus.IN_PAY, null);
-            JSONObject json = paymentService.mtnPay(order.getOrderId(), BigDecimal.valueOf(order.getMtnAmount()), Currency.MTN);
-            if (json != null && StringUtils.equals("200", json.getString("code"))) {
-                order = paymentFinished(order, PaymentStatus.PAID, json);
-            } else {
-                order = paymentFinished(order, PaymentStatus.PAY_FAIL, json);
-            }
-            JSONObject exchangeResult = exchangeService.exchange(orderId);
-            exchangeFinished(order, ExchangeStatus.EXCHANGING, null);
-            if (exchangeResult != null && StringUtils.equals("200", exchangeResult.getString("code"))) {
-                order = exchangeFinished(order, ExchangeStatus.EXCHANGED, exchangeResult);
-            } else {
-                order = exchangeFinished(order, ExchangeStatus.EXCHANGE_FAIL, exchangeResult);
-            }
+            PaymentResult toPay = new PaymentResult();
+            toPay.setOrderId(orderId);
+            toPay.setAmount(BigDecimal.valueOf(order.getMtnAmount()));
+            toPay.setCurrency(Currency.MTN);
+            toPay.setResultCode("200");
+            toPay.setResultMessage("success");
+            toPay.setTime(new Date());
+            toPay.setUserId(order.getUserId());
+            toPay.setStatus(PaymentStatus.IN_PAY);
+            order = paymentFinished(order, toPay);
+            PaymentResult paymentResult = paymentService.mtnPay(order.getOrderId());
+            order = paymentFinished(order, paymentResult);
+            order = toExchange(order);
 
         }
         if (PayType.valueOf(order.getPayType()) == PayType.CASH) {
-            JSONObject json = paymentService.ipsPay(order.getOrderId(), BigDecimal.valueOf(order.getMtnAmount()), Currency.MTN);
-            if (json != null && StringUtils.equals("200", json.getString("code"))) {
-                paymentFinished(order, PaymentStatus.IN_PAY, json);
-            } else {
-                order = paymentFinished(order, PaymentStatus.PAY_FAIL, json);
-            }
+            PaymentResult paymentResult = paymentService.ipsPay(order.getOrderId());
+            order = paymentFinished(order, paymentResult);
+        }
+        return order;
+    }
+
+    private MallOrder toExchange(MallOrder order) {
+        if (order.getPayStatus().equals(PaymentStatus.PAID.getCode().byteValue())
+                && (order.getExchangeStatus().equals(ExchangeStatus.NOT_EXCHANGED.getCode().byteValue())
+                || order.getExchangeStatus().equals(ExchangeStatus.EXCHANGE_FAIL.getCode().byteValue()))) {
+            ExchangeResult toExchange = new ExchangeResult();
+            toExchange.setTime(new Date());
+            toExchange.setStatus(ExchangeStatus.EXCHANGING);
+            toExchange.setResultCode("200");
+            toExchange.setResultMessage("success");
+            toExchange.setOrderId(order.getOrderId());
+            order = exchangeFinished(order, toExchange);
+            ExchangeResult exchangeResult = exchangeService.exchange(order.getOrderId());
+            order = exchangeFinished(order, exchangeResult);
         }
         return order;
     }
 
     @Override
     public MallOrder refund(String orderId) {
-        return null;
+        MallOrder order = new MallOrder();
+        order.setOrderId(orderId);
+        order = orderMapper.selectOne(order);
+        if (order == null) {
+            throw new RuntimeException("unknown_order_error");
+        }
+        PaymentResult toPay = new PaymentResult();
+        toPay.setOrderId(orderId);
+        toPay.setAmount(BigDecimal.valueOf(order.getMtnAmount()));
+        toPay.setCurrency(Currency.valueOf(order.getCurrency()));
+        toPay.setResultCode("200");
+        toPay.setResultMessage("refunded");
+        toPay.setTime(new Date());
+        toPay.setUserId(order.getUserId());
+        toPay.setStatus(PaymentStatus.REFUND);
+        order = paymentFinished(order, toPay);
+        return order;
     }
 
     @Override
     public MallOrder cancel(String orderId) {
-        return null;
+        MallOrder order = new MallOrder();
+        order.setOrderId(orderId);
+        order = orderMapper.selectOne(order);
+        if (order == null) {
+            throw new RuntimeException("unknown_order_error");
+        }
+        PaymentResult toPay = new PaymentResult();
+        toPay.setOrderId(orderId);
+        toPay.setAmount(BigDecimal.valueOf(order.getMtnAmount()));
+        toPay.setCurrency(Currency.valueOf(order.getCurrency()));
+        toPay.setResultCode("200");
+        toPay.setResultMessage("canceled");
+        toPay.setTime(new Date());
+        toPay.setUserId(order.getUserId());
+        toPay.setStatus(PaymentStatus.CANCELED);
+        order = paymentFinished(order, toPay);
+        return order;
+    }
+
+    @Override
+    public MallOrder paymentNotify(JSONObject data) {
+        if (data == null) {
+            throw new RuntimeException("unknown_data_error");
+        }
+        PaymentResult paymentResult = paymentService.processPaymentNotify(data);
+        String orderId = paymentResult.getOrderId();
+        if (StringUtils.isBlank(orderId)) {
+            throw new RuntimeException("unknown_orderId_error");
+        }
+        MallOrder order = new MallOrder();
+        order.setOrderId(orderId);
+        order = orderMapper.selectOne(order);
+        if (order == null) {
+            throw new RuntimeException("unknown_order_error");
+        }
+        order = paymentFinished(order, paymentResult);
+        order = toExchange(order);
+        return order;
+    }
+
+    @Override
+    public MallOrder exchangeNotify(JSONObject data) {
+        if (data == null) {
+            throw new RuntimeException("unknown_data_error");
+        }
+        ExchangeResult exchangeResult = exchangeService.processExchangeNotify(data);
+        String orderId = exchangeResult.getOrderId();
+        if (StringUtils.isBlank(orderId)) {
+            throw new RuntimeException("unknown_orderId_error");
+        }
+        MallOrder order = new MallOrder();
+        order.setOrderId(orderId);
+        order = orderMapper.selectOne(order);
+        if (order == null) {
+            throw new RuntimeException("unknown_order_error");
+        }
+        order = exchangeFinished(order, exchangeResult);
+        return order;
     }
 }

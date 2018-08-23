@@ -25,6 +25,11 @@ mapper:
   not-empty: false
   identity: MYSQL
 
+logging:
+  level:
+    tk.mybatis: debug
+    one.motion.mall.mapper: debug
+
 spring:
   profiles:
     active: dev

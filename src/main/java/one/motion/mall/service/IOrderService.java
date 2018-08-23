@@ -1,5 +1,6 @@
 package one.motion.mall.service;
 
+import com.alibaba.fastjson.JSONObject;
 import one.motion.mall.dto.PayType;
 import one.motion.mall.model.MallOrder;
 
@@ -12,5 +13,9 @@ public interface IOrderService {
     MallOrder refund(String orderId);
 
     MallOrder cancel(String orderId);
+
+    MallOrder paymentNotify(JSONObject data);
+
+    MallOrder exchangeNotify(JSONObject data);
 
 }

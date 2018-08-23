@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import io.grpc.Channel;
 import net.devh.springboot.autoconfigure.grpc.client.GrpcClient;
 import one.motion.mall.dto.Currency;
+import one.motion.mall.dto.PaymentResult;
 import one.motion.mall.dto.PaymentStatus;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.model.MallOrder;
@@ -19,6 +20,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
 import java.math.BigDecimal;
+import java.util.Date;
 
 @Service
 public class PaymentServiceImpl implements IPaymentService {
@@ -39,34 +41,22 @@ public class PaymentServiceImpl implements IPaymentService {
     private String walletAddress;
 
     @Override
-    public JSONObject mtnPay(String orderId, BigDecimal amount, Currency currency) {
-        JSONObject jsonObject = new JSONObject();
+    public PaymentResult mtnPay(String orderId) {
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
         if (order == null || order.getPayStatus() == null || !order.getPayStatus().equals(PaymentStatus.UNPAID.getCode().byteValue())) {
-            jsonObject.put("code", "400");
-            jsonObject.put("message", "order_not_exists");
-            return jsonObject;
+            throw new RuntimeException("order_status_error");
         }
-        switch (currency) {
-            case MTN: {
-                return payWithMTN(order.getOrderId(), new BigDecimal(order.getMtnAmount()), order.getUserId());
-
-            }
-        }
-        return jsonObject;
+        return payWithMTN(order.getOrderId(), new BigDecimal(order.getMtnAmount()), order.getUserId());
     }
 
     @Override
-    public JSONObject ipsPay(String orderId, BigDecimal amount, Currency currency) {
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("code", 200);
-        jsonObject.put("message", "QRCode");
-        return jsonObject;
+    public PaymentResult ipsPay(String orderId) {
+        return new PaymentResult();
     }
 
-    private JSONObject payWithMTN(String orderId, BigDecimal amount, Long userId) {
+    private PaymentResult payWithMTN(String orderId, BigDecimal amount, Long userId) {
         MtnServiceGrpc.MtnServiceBlockingStub stub = MtnServiceGrpc.newBlockingStub(walletServiceChannel);
         ExpendMsgProto request = ExpendMsgProto.newBuilder()
                 .setMtn(amount.toString())
@@ -79,10 +69,20 @@ public class PaymentServiceImpl implements IPaymentService {
         int code = result.getResultCode().getNumber();
         String message = result.getResultMsg();
         logger.info("Send transaction result: {}:{}, {}", code, codeName, message);
-        JSONObject jsonObject = new JSONObject();
-        jsonObject.put("code", code);
-        jsonObject.put("message", message);
-        return jsonObject;
+        PaymentResult paymentResult = new PaymentResult();
+        paymentResult.setOrderId(orderId);
+        paymentResult.setAmount(amount);
+        paymentResult.setCurrency(Currency.MTN);
+        paymentResult.setResultCode(String.valueOf(code));
+        paymentResult.setResultMessage(message);
+        paymentResult.setTime(new Date());
+        paymentResult.setUserId(userId);
+        if (code == 200) {
+            paymentResult.setStatus(PaymentStatus.PAID);
+        } else {
+            paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+        }
+        return paymentResult;
     }
 
     @Override
@@ -108,5 +108,10 @@ public class PaymentServiceImpl implements IPaymentService {
             logger.error(e.getMessage());
             return BigDecimal.ZERO;
         }
+    }
+
+    @Override
+    public PaymentResult processPaymentNotify(JSONObject data) {
+        return new PaymentResult();
     }
 }

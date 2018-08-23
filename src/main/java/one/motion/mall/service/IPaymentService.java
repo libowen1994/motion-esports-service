@@ -1,16 +1,18 @@
 package one.motion.mall.service;
 
 import com.alibaba.fastjson.JSONObject;
-import one.motion.mall.dto.Currency;
+import one.motion.mall.dto.PaymentResult;
 
 import java.math.BigDecimal;
 
 public interface IPaymentService {
 
-    JSONObject mtnPay(String orderId, BigDecimal amount, Currency currency);
+    PaymentResult mtnPay(String orderId);
 
-    JSONObject ipsPay(String orderId, BigDecimal amount, Currency currency);
+    PaymentResult ipsPay(String orderId);
 
     BigDecimal getMtnValue(BigDecimal amount, String currency);
+
+    PaymentResult processPaymentNotify(JSONObject data);
 
 }
