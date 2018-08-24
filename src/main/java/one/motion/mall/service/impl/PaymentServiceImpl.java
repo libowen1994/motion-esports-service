@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import io.grpc.Channel;
 import net.devh.springboot.autoconfigure.grpc.client.GrpcClient;
 import one.motion.mall.dto.Currency;
+import one.motion.mall.dto.PayType;
 import one.motion.mall.dto.PaymentResult;
 import one.motion.mall.dto.PaymentStatus;
 import one.motion.mall.mapper.MallOrderMapper;
@@ -52,7 +53,7 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public PaymentResult ipsPay(String orderId) {
+    public PaymentResult cashPay(String orderId) {
         return new PaymentResult();
     }
 
@@ -70,6 +71,7 @@ public class PaymentServiceImpl implements IPaymentService {
         String message = result.getResultMsg();
         logger.info("Send transaction result: {}:{}, {}", code, codeName, message);
         PaymentResult paymentResult = new PaymentResult();
+        paymentResult.setPaymentOrderId(orderId);
         paymentResult.setOrderId(orderId);
         paymentResult.setAmount(amount);
         paymentResult.setCurrency(Currency.MTN);
@@ -111,7 +113,13 @@ public class PaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public PaymentResult processPaymentNotify(JSONObject data) {
+    public PaymentResult processPaymentNotify(String data, PayType payType) {
+        if (payType == null) {
+            throw new RuntimeException("unknown_payType_error");
+        }
+        if (PayType.SHB == payType) {
+
+        }
         return new PaymentResult();
     }
 }

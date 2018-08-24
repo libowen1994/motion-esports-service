@@ -1,7 +1,7 @@
 package one.motion.mall.dto;
 
 public enum PayType {
-    CASH(1), MTN(2);
+    MTN(1), IPS(2), SHB(3);
 
     private Integer code;
 
@@ -21,9 +21,11 @@ public enum PayType {
     public static PayType valueOf(int code) {
         switch (code) {
             case 1:
-                return CASH;
-            case 2:
                 return MTN;
+            case 2:
+                return IPS;
+            case 3:
+                return SHB;
             default:
                 return null;
         }

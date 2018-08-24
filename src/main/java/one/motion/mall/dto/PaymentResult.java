@@ -5,6 +5,7 @@ import java.util.Date;
 
 public class PaymentResult {
     private String orderId;
+    private String paymentOrderId;
     private Long userId;
     private BigDecimal amount;
     private Date time;
@@ -12,6 +13,14 @@ public class PaymentResult {
     private PaymentStatus status;
     private String resultCode;
     private String resultMessage;
+
+    public String getPaymentOrderId() {
+        return paymentOrderId;
+    }
+
+    public void setPaymentOrderId(String paymentOrderId) {
+        this.paymentOrderId = paymentOrderId;
+    }
 
     public Long getUserId() {
         return userId;

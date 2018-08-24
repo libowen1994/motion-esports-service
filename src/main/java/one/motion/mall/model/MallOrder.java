@@ -84,10 +84,22 @@ public class MallOrder {
     private Byte payType;
 
     /**
+     * 支付系统订单号
+     */
+    @Column(name = "payment_order_id")
+    private String paymentOrderId;
+
+    /**
      * 订单付款状态：1未付款、2已付款、3已退款, 4付款失败，5已取消
      */
     @Column(name = "pay_status")
     private Byte payStatus;
+
+    /**
+     * 兑换订单号
+     */
+    @Column(name = "exchange_order_id")
+    private String exchangeOrderId;
 
     /**
      * 订单状态：1未兑换，2兑换进行中，2已兌換成功，3兑换失败
@@ -366,6 +378,24 @@ public class MallOrder {
     }
 
     /**
+     * 获取支付系统订单号
+     *
+     * @return payment_order_id - 支付系统订单号
+     */
+    public String getPaymentOrderId() {
+        return paymentOrderId;
+    }
+
+    /**
+     * 设置支付系统订单号
+     *
+     * @param paymentOrderId 支付系统订单号
+     */
+    public void setPaymentOrderId(String paymentOrderId) {
+        this.paymentOrderId = paymentOrderId == null ? null : paymentOrderId.trim();
+    }
+
+    /**
      * 获取订单付款状态：1未付款、2已付款、3已退款, 4付款失败，5已取消
      *
      * @return pay_status - 订单付款状态：1未付款、2已付款、3已退款, 4付款失败，5已取消
@@ -381,6 +411,24 @@ public class MallOrder {
      */
     public void setPayStatus(Byte payStatus) {
         this.payStatus = payStatus;
+    }
+
+    /**
+     * 获取兑换订单号
+     *
+     * @return exchange_order_id - 兑换订单号
+     */
+    public String getExchangeOrderId() {
+        return exchangeOrderId;
+    }
+
+    /**
+     * 设置兑换订单号
+     *
+     * @param exchangeOrderId 兑换订单号
+     */
+    public void setExchangeOrderId(String exchangeOrderId) {
+        this.exchangeOrderId = exchangeOrderId == null ? null : exchangeOrderId.trim();
     }
 
     /**

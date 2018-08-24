@@ -138,7 +138,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         paymentResult.setTime(new Date());
         paymentResult.setUserId(380L);
         paymentResult.setStatus(PaymentStatus.IN_PAY);
-        when(mockPaymentService.ipsPay(orderId)).thenReturn(paymentResult);
+        when(mockPaymentService.cashPay(orderId)).thenReturn(paymentResult);
         order = orderService.submit(orderId);
         Assert.assertNotNull(order);
         Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.IN_PAY.getCode().byteValue());

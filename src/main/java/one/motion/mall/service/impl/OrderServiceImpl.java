@@ -1,6 +1,5 @@
 package one.motion.mall.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import one.motion.mall.dto.*;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.mapper.MallProductCategoryMapper;
@@ -124,6 +123,7 @@ public class OrderServiceImpl implements IOrderService {
             throw new RuntimeException("order_payment_status_error");
         }
         order.setPayStatus(status.getCode().byteValue());
+        order.setPaymentOrderId(paymentResult.getPaymentOrderId());
         order.setPayResult(StringUtils.defaultIfBlank(paymentResult.getResultCode(), "") + "_" + StringUtils.defaultIfBlank(paymentResult.getResultMessage(), ""));
         order.setCreatedAt(null);
         order.setUpdatedAt(null);
@@ -150,6 +150,7 @@ public class OrderServiceImpl implements IOrderService {
             throw new RuntimeException("order_exchange_status_error");
         }
         order.setExchangeStatus(status.getCode().byteValue());
+        order.setExchangeOrderId(exchangeResult.getExchangeOrderId());
         order.setExchangeResult(StringUtils.defaultIfBlank(exchangeResult.getResultCode(), "") + "_" + StringUtils.defaultIfBlank(exchangeResult.getResultMessage(), ""));
         order.setCreatedAt(null);
         order.setUpdatedAt(null);
@@ -180,9 +181,8 @@ public class OrderServiceImpl implements IOrderService {
             order = paymentFinished(order, paymentResult);
             order = toExchange(order);
 
-        }
-        if (PayType.valueOf(order.getPayType()) == PayType.CASH) {
-            PaymentResult paymentResult = paymentService.ipsPay(order.getOrderId());
+        } else {
+            PaymentResult paymentResult = paymentService.cashPay(order.getOrderId());
             order = paymentFinished(order, paymentResult);
         }
         return order;
@@ -248,11 +248,11 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public MallOrder paymentNotify(JSONObject data) {
+    public MallOrder paymentNotify(String data, PayType payType) {
         if (data == null) {
             throw new RuntimeException("unknown_data_error");
         }
-        PaymentResult paymentResult = paymentService.processPaymentNotify(data);
+        PaymentResult paymentResult = paymentService.processPaymentNotify(data, payType);
         String orderId = paymentResult.getOrderId();
         if (StringUtils.isBlank(orderId)) {
             throw new RuntimeException("unknown_orderId_error");
@@ -269,7 +269,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public MallOrder exchangeNotify(JSONObject data) {
+    public MallOrder exchangeNotify(String data) {
         if (data == null) {
             throw new RuntimeException("unknown_data_error");
         }

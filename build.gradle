@@ -72,6 +72,7 @@ dependencies {
     compile('com.alibaba:fastjson:1.2.47')
     compile('commons-io:commons-io:2.6')
     compile('org.apache.commons:commons-lang3:3.7')
+    compile('commons-codec:commons-codec:1.11')
     runtime('org.springframework.boot:spring-boot-devtools')
     runtime('mysql:mysql-connector-java')
     testCompile('org.springframework.boot:spring-boot-starter-test')

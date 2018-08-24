@@ -1,6 +1,5 @@
 package one.motion.mall.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
 import one.motion.mall.dto.ExchangeResult;
 import one.motion.mall.dto.ExchangeStatus;
 import one.motion.mall.service.IExchangeService;
@@ -22,9 +21,9 @@ public class ExchangeServiceImpl implements IExchangeService {
     }
 
     @Override
-    public ExchangeResult processExchangeNotify(JSONObject data) {
+    public ExchangeResult processExchangeNotify(String data) {
         ExchangeResult exchangeResult = new ExchangeResult();
-        exchangeResult.setOrderId(data.getString("orderId"));
+        exchangeResult.setOrderId(data);
         exchangeResult.setResultCode("200");
         exchangeResult.setResultMessage("success");
         exchangeResult.setStatus(ExchangeStatus.EXCHANGED);

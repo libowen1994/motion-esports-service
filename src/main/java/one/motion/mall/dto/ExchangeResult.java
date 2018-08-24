@@ -4,6 +4,7 @@ import java.util.Date;
 
 public class ExchangeResult {
     private String orderId;
+    private String exchangeOrderId;
     private ExchangeStatus status;
     private Date time;
     private String resultCode;
@@ -47,5 +48,13 @@ public class ExchangeResult {
 
     public void setResultMessage(String resultMessage) {
         this.resultMessage = resultMessage;
+    }
+
+    public String getExchangeOrderId() {
+        return exchangeOrderId;
+    }
+
+    public void setExchangeOrderId(String exchangeOrderId) {
+        this.exchangeOrderId = exchangeOrderId;
     }
 }

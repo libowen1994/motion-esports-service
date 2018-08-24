@@ -19,7 +19,9 @@
     <result column="discount" jdbcType="REAL" property="discount" />
     <result column="mtn_amount" jdbcType="DOUBLE" property="mtnAmount" />
     <result column="pay_type" jdbcType="TINYINT" property="payType" />
+    <result column="payment_order_id" jdbcType="VARCHAR" property="paymentOrderId" />
     <result column="pay_status" jdbcType="TINYINT" property="payStatus" />
+    <result column="exchange_order_id" jdbcType="VARCHAR" property="exchangeOrderId" />
     <result column="exchange_status" jdbcType="TINYINT" property="exchangeStatus" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
     <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />

@@ -14,8 +14,8 @@ public interface IOrderService {
 
     MallOrder cancel(String orderId);
 
-    MallOrder paymentNotify(JSONObject data);
+    MallOrder paymentNotify(String data, PayType payType);
 
-    MallOrder exchangeNotify(JSONObject data);
+    MallOrder exchangeNotify(String data);
 
 }
