@@ -177,12 +177,12 @@ public class OrderServiceImpl implements IOrderService {
             toPay.setUserId(order.getUserId());
             toPay.setStatus(PaymentStatus.IN_PAY);
             order = paymentFinished(order, toPay);
-            PaymentResult paymentResult = paymentService.mtnPay(order.getOrderId());
+            PaymentResult paymentResult = paymentService.mtnPay(order);
             order = paymentFinished(order, paymentResult);
             order = toExchange(order);
 
         } else {
-            PaymentResult paymentResult = paymentService.cashPay(order.getOrderId());
+            PaymentResult paymentResult = paymentService.cashPay(order, PayType.SHB);
             order = paymentFinished(order, paymentResult);
         }
         return order;

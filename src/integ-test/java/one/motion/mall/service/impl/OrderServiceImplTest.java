@@ -83,7 +83,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         paymentResult.setTime(new Date());
         paymentResult.setUserId(380L);
         paymentResult.setStatus(PaymentStatus.PAID);
-        when(mockPaymentService.mtnPay(Mockito.anyString())).thenReturn(paymentResult);
+        when(mockPaymentService.mtnPay(Mockito.any())).thenReturn(paymentResult);
         order = orderService.submit(orderId);
         Assert.assertNotNull(order);
         Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.PAID.getCode().byteValue());
@@ -110,7 +110,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         paymentResult.setTime(new Date());
         paymentResult.setUserId(380L);
         paymentResult.setStatus(PaymentStatus.PAY_FAIL);
-        when(mockPaymentService.mtnPay(Mockito.anyString())).thenReturn(paymentResult);
+        when(mockPaymentService.mtnPay(Mockito.any())).thenReturn(paymentResult);
         order = orderService.submit(orderId);
         Assert.assertNotNull(order);
         Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.PAY_FAIL.getCode().byteValue());
@@ -137,7 +137,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         paymentResult.setTime(new Date());
         paymentResult.setUserId(380L);
         paymentResult.setStatus(PaymentStatus.IN_PAY);
-        when(mockPaymentService.cashPay(orderId)).thenReturn(paymentResult);
+        when(mockPaymentService.cashPay(Mockito.any(), Mockito.any())).thenReturn(paymentResult);
         order = orderService.submit(orderId);
         Assert.assertNotNull(order);
         Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.IN_PAY.getCode().byteValue());

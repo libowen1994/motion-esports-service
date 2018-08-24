@@ -7,6 +7,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.UnsupportedEncodingException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class ShbUtils {
 
@@ -59,6 +61,9 @@ public class ShbUtils {
     }
 
     private static boolean verifyResponseSign(JSONObject businessContext, JSONObject businessHead) throws Exception {
+        if (businessContext == null || businessHead == null) {
+            return false;
+        }
         String sign = businessHead.getString("sign");
         return RSAUtils.verify(businessContext.toJSONString().getBytes(), shbPublicKeyString, sign);
     }
