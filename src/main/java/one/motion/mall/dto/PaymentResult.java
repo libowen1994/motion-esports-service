@@ -7,12 +7,30 @@ public class PaymentResult {
     private String orderId;
     private String paymentOrderId;
     private Long userId;
-    private BigDecimal amount;
+    private BigDecimal totalAmount;
+    private BigDecimal fee;
     private Date time;
     private Currency currency;
     private PaymentStatus status;
     private String resultCode;
     private String resultMessage;
+    private String url;
+
+    public BigDecimal getFee() {
+        return fee;
+    }
+
+    public void setFee(BigDecimal fee) {
+        this.fee = fee;
+    }
+
+    public String getUrl() {
+        return url;
+    }
+
+    public void setUrl(String url) {
+        this.url = url;
+    }
 
     public String getPaymentOrderId() {
         return paymentOrderId;
@@ -46,12 +64,12 @@ public class PaymentResult {
         this.orderId = orderId;
     }
 
-    public BigDecimal getAmount() {
-        return amount;
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
     }
 
-    public void setAmount(BigDecimal amount) {
-        this.amount = amount;
+    public void setTotalAmount(BigDecimal totalAmount) {
+        this.totalAmount = totalAmount;
     }
 
     public Date getTime() {

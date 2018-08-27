@@ -37,13 +37,20 @@ public class MallOrder {
     /**
      * 名字
      */
-    private String name;
+    @Column(name = "product_name")
+    private String productName;
 
     /**
      * 分类代码
      */
     @Column(name = "category_code")
     private String categoryCode;
+
+    /**
+     * ip
+     */
+    @Column(name = "ip_address")
+    private String ipAddress;
 
     /**
      * 商品代码
@@ -62,6 +69,17 @@ public class MallOrder {
     private Double price;
 
     /**
+     * 总价
+     */
+    @Column(name = "total_amount")
+    private Double totalAmount;
+
+    /**
+     * 手续费
+     */
+    private Double fee;
+
+    /**
      * 币种
      */
     private String currency;
@@ -78,7 +96,7 @@ public class MallOrder {
     private Double mtnAmount;
 
     /**
-     * 付款方式(1法币付款，2mtn付款)
+     * 付款方式(1mtn付款, 2：IPS, 3：SHB)
      */
     @Column(name = "pay_type")
     private Byte payType;
@@ -218,19 +236,19 @@ public class MallOrder {
     /**
      * 获取名字
      *
-     * @return name - 名字
+     * @return product_name - 名字
      */
-    public String getName() {
-        return name;
+    public String getProductName() {
+        return productName;
     }
 
     /**
      * 设置名字
      *
-     * @param name 名字
+     * @param productName 名字
      */
-    public void setName(String name) {
-        this.name = name == null ? null : name.trim();
+    public void setProductName(String productName) {
+        this.productName = productName == null ? null : productName.trim();
     }
 
     /**
@@ -249,6 +267,24 @@ public class MallOrder {
      */
     public void setCategoryCode(String categoryCode) {
         this.categoryCode = categoryCode == null ? null : categoryCode.trim();
+    }
+
+    /**
+     * 获取ip
+     *
+     * @return ip_address - ip
+     */
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    /**
+     * 设置ip
+     *
+     * @param ipAddress ip
+     */
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress == null ? null : ipAddress.trim();
     }
 
     /**
@@ -306,6 +342,42 @@ public class MallOrder {
     }
 
     /**
+     * 获取总价
+     *
+     * @return total_amount - 总价
+     */
+    public Double getTotalAmount() {
+        return totalAmount;
+    }
+
+    /**
+     * 设置总价
+     *
+     * @param totalAmount 总价
+     */
+    public void setTotalAmount(Double totalAmount) {
+        this.totalAmount = totalAmount;
+    }
+
+    /**
+     * 获取手续费
+     *
+     * @return fee - 手续费
+     */
+    public Double getFee() {
+        return fee;
+    }
+
+    /**
+     * 设置手续费
+     *
+     * @param fee 手续费
+     */
+    public void setFee(Double fee) {
+        this.fee = fee;
+    }
+
+    /**
      * 获取币种
      *
      * @return currency - 币种
@@ -360,18 +432,18 @@ public class MallOrder {
     }
 
     /**
-     * 获取付款方式(1法币付款，2mtn付款)
+     * 获取付款方式(1mtn付款, 2：IPS, 3：SHB)
      *
-     * @return pay_type - 付款方式(1法币付款，2mtn付款)
+     * @return pay_type - 付款方式(1mtn付款, 2：IPS, 3：SHB)
      */
     public Byte getPayType() {
         return payType;
     }
 
     /**
-     * 设置付款方式(1法币付款，2mtn付款)
+     * 设置付款方式(1mtn付款, 2：IPS, 3：SHB)
      *
-     * @param payType 付款方式(1法币付款，2mtn付款)
+     * @param payType 付款方式(1mtn付款, 2：IPS, 3：SHB)
      */
     public void setPayType(Byte payType) {
         this.payType = payType;
