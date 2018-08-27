@@ -61,4 +61,9 @@ public class MTNPaymentServiceImpl implements IPaymentService {
     public PaymentResult processPaymentNotify(String data) {
         return null;
     }
+
+    @Override
+    public PaymentResult queryPaymentStatus(String orderId) {
+        return null;
+    }
 }

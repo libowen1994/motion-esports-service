@@ -9,4 +9,7 @@ public interface IPaymentService {
 
     PaymentResult processPaymentNotify(String data);
 
+
+    PaymentResult queryPaymentStatus(String orderId);
+
 }

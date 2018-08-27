@@ -7,9 +7,11 @@ import one.motion.mall.mapper.MallProductMapper;
 import one.motion.mall.model.MallOrder;
 import one.motion.mall.model.MallProduct;
 import one.motion.mall.service.IOrderService;
+import one.motion.mall.service.IPaymentService;
 import one.motion.mall.service.IWalletService;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
@@ -27,7 +29,7 @@ import static org.mockito.Mockito.when;
 
 @SpringBootTest
 @TestExecutionListeners(listeners = MockitoTestExecutionListener.class)
-public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringContextTests {
+public class SHBPaymentServiceImplTest extends AbstractTransactionalTestNGSpringContextTests {
 
     @Autowired
     private IOrderService orderService;
@@ -40,6 +42,10 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
 
     @MockBean
     private IWalletService mockWalletService;
+
+    @Autowired
+    @Qualifier("shbPaymentService")
+    private IPaymentService shbPaymentService;
 
     @BeforeClass
     public void beforeClass() {
@@ -64,7 +70,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
     }
 
     @Test
-    public void testMtnBuySuccess() {
+    public void testToPay() {
         when(mockWalletService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
         String orderId = orderService.checkout(380L, "12345", 1, PayType.MTN);
         Assert.assertNotNull(orderId);
@@ -75,40 +81,22 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         Assert.assertEquals(order.getUserId(), Long.valueOf(380L));
         Assert.assertEquals(order.getMtnAmount(), 12.34);
         Assert.assertEquals(order.getTotalAmount(), 9d);
-        JSONObject json = new JSONObject();
-        json.put("code", 200);
-        json.put("message", "success");
-        when(mockWalletService.expendMTN(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(json);
-        JSONObject result = orderService.submit(orderId, PayChannel.MOTION);
+        JSONObject json = orderService.submit(orderId, PayChannel.WECHAT);
+        Assert.assertNotNull(json);
+        Assert.assertNotNull(json.getString("url"));
         order = new MallOrder();
         order.setOrderId(orderId);
-        order = orderMapper.selectOne(order);
-        Assert.assertNotNull(order);
-        Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.PAID.getCode().byteValue());
-        Assert.assertEquals(order.getExchangeStatus(), (Byte) ExchangeStatus.EXCHANGED.getCode().byteValue());
+        PaymentResult paymentResult = shbPaymentService.queryPaymentStatus(orderId);
+        Assert.assertNotNull(paymentResult);
+        Assert.assertEquals(paymentResult.getStatus(), PaymentStatus.IN_PAY);
+
     }
 
     @Test
-    public void testMtnBuyFail() {
-        when(mockWalletService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
-        String orderId = orderService.checkout(380L, "12345", 1, PayType.MTN);
-        Assert.assertNotNull(orderId);
-        MallOrder order = new MallOrder();
-        order.setOrderId(orderId);
-        order = orderMapper.selectOne(order);
-        Assert.assertNotNull(order);
-        Assert.assertEquals(order.getUserId(), Long.valueOf(380L));
-        Assert.assertEquals(order.getMtnAmount(), 12.34);
-        JSONObject json = new JSONObject();
-        json.put("code", 400);
-        json.put("message", "fail");
-        when(mockWalletService.expendMTN(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(json);
-        JSONObject result = orderService.submit(orderId, PayChannel.MOTION);
-        order = new MallOrder();
-        order.setOrderId(orderId);
-        order = orderMapper.selectOne(order);
-        Assert.assertNotNull(order);
-        Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.PAY_FAIL.getCode().byteValue());
-        Assert.assertEquals(order.getExchangeStatus(), (Byte) ExchangeStatus.NOT_EXCHANGED.getCode().byteValue());
+    public void testProcessPaymentNotify() {
+    }
+
+    @Test
+    public void testQueryPaymentStatus() {
     }
 }

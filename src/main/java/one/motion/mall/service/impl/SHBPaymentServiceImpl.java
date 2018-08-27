@@ -1,5 +1,6 @@
 package one.motion.mall.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import io.grpc.Channel;
 import net.devh.springboot.autoconfigure.grpc.client.GrpcClient;
@@ -10,7 +11,7 @@ import one.motion.mall.dto.PaymentStatus;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.model.MallOrder;
 import one.motion.mall.service.IPaymentService;
-import one.motion.mall.utils.ShbUtils;
+import one.motion.mall.utils.RSAUtils;
 import org.apache.commons.lang3.time.DateUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,11 +32,11 @@ public class SHBPaymentServiceImpl implements IPaymentService {
     private final MallOrderMapper orderMapper;
     private final RestTemplate restTemplate;
 
-    @Value("${SHB_MERCHANT_NUMBER:}")
+    @Value("${SHB_MERCHANT_NUMBER}")
     private String SHB_MERCHANT_NUMBER;
 
-    @Value("${SHB_PAYMENT_URL:}")
-    private String SHB_PAYMENT_URL;
+    @Value("${SHB_PAYMENT_BASE_URL}")
+    private String SHB_PAYMENT_BASE_URL;
 
     public SHBPaymentServiceImpl(MallOrderMapper orderMapper, RestTemplate restTemplate) {
         this.orderMapper = orderMapper;
@@ -59,7 +60,6 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         if (order.getPayStatus() == null || !order.getPayStatus().equals(PaymentStatus.UNPAID.getCode().byteValue())) {
             throw new RuntimeException("order_status_error");
         }
-        JSONObject businessHead = buildBusinessHead();
         String payType = "";
         if (channel == PayChannel.ALIPAY) {
             payType = "ALI_NATIVE";
@@ -67,15 +67,15 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         if (channel == PayChannel.WECHAT) {
             payType = "WECHAT_NATIVE";
         }
-        JSONObject businessContext = buildBusinessContextFormPay(orderId, payType, BigDecimal.valueOf(order.getTotalAmount()),
-                order.getProductName(), order.getProductId(), order.getCategoryCode(), order.getIpAddress(),
-                order.getUserId());
-        JSONObject data = new JSONObject(2);
-        data.put("businessHead", businessHead);
-        data.put("businessContext", businessContext);
+        JSONObject businessHead = buildBusinessHead();
+
+//        JSONObject businessContext = buildBusinessContextFormPay(orderId, payType, BigDecimal.valueOf(order.getTotalAmount()),
+//                order.getProductName(), order.getProductId(), order.getCategoryCode(), order.getIpAddress(),
+//                order.getUserId());
+        JSONObject businessContext = buildBusinessContextFormPay();
         String context = null;
         try {
-            context = ShbUtils.encodeContext(data);
+            context = RSAUtils.verifyAndEncryptionToString(businessContext, businessHead, privateKeyString, shbPublicKeyString);
         } catch (Exception e) {
             throw new RuntimeException("sign_error");
         }
@@ -85,7 +85,7 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         headers.setContentType(MediaType.APPLICATION_JSON);
 
         HttpEntity<String> entity = new HttpEntity<>(toPost.toJSONString(), headers);
-        ResponseEntity<JSONObject> response = restTemplate.exchange(SHB_PAYMENT_URL, HttpMethod.POST, entity, JSONObject.class);
+        ResponseEntity<JSONObject> response = restTemplate.exchange(SHB_PAYMENT_BASE_URL + "/api/unified/payment", HttpMethod.POST, entity, JSONObject.class);
         PaymentResult paymentResult = new PaymentResult();
         JSONObject responseJSON = response.getBody();
         if (response.getStatusCode() != HttpStatus.OK || responseJSON == null) {
@@ -102,21 +102,22 @@ public class SHBPaymentServiceImpl implements IPaymentService {
             paymentResult.setResultMessage(responseMessage.getString("content"));
             return paymentResult;
         }
-        if (!ShbUtils.verify(responseJSON)) {
-            throw new RuntimeException("shb_verify_error");
-        }
-        JSONObject responseData = ShbUtils.decodeContext(responseJSON.getString("context"));
+        JSONObject responseData = decodeContext(responseJSON.getString("context"));
         if (responseData == null) {
             throw new RuntimeException("shb_decode_error");
         }
-        paymentResult.setPaymentOrderId(responseData.getString("shbOrderNumber"));
+        if (!verify(responseData)) {
+            throw new RuntimeException("shb_verify_error");
+        }
+        businessContext = responseData.getJSONObject("businessContext");
+        paymentResult.setPaymentOrderId(businessContext.getString("shbOrderNumber"));
         paymentResult.setOrderId(orderId);
-        paymentResult.setResultCode(responseData.getString("orderStatus"));
-        paymentResult.setResultMessage(responseData.toJSONString());
+        paymentResult.setResultCode(businessContext.getString("orderStatus"));
+        paymentResult.setResultMessage(businessContext.toJSONString());
         paymentResult.setTime(new Date());
-        paymentResult.setUrl(responseData.getString("content"));
+        paymentResult.setUrl(businessContext.getString("content"));
         paymentResult.setUserId(order.getUserId());
-        if (responseData.getString("orderStatus").equals("WAIT")) {
+        if ("WAIT".equals(businessContext.getString("orderStatus"))) {
             paymentResult.setStatus(PaymentStatus.IN_PAY);
         } else {
             paymentResult.setStatus(PaymentStatus.PAY_FAIL);
@@ -126,14 +127,9 @@ public class SHBPaymentServiceImpl implements IPaymentService {
 
     @Override
     public PaymentResult processPaymentNotify(String data) {
-
-        return shbResult(data);
-    }
-
-    private PaymentResult shbResult(String data) {
         PaymentResult paymentResult = new PaymentResult();
         JSONObject requestJson = JSONObject.parseObject(data);
-        JSONObject jsonObject = ShbUtils.decodeContext(requestJson.getString("context"));
+        JSONObject jsonObject = decodeContext(requestJson.getString("context"));
         if (jsonObject == null) {
             throw new RuntimeException("decode_context_error");
         }
@@ -142,7 +138,7 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         JSONObject context = jsonObject.getJSONObject("businessContext");
         logger.error("shb异步通知报文,解密后,context:{} ", context);
 
-        if (ShbUtils.verify(jsonObject)) {
+        if (verify(jsonObject)) {
             throw new RuntimeException("sign_verify_error");
         }
         String orderStatus = context.get("orderStatus") == null ? "" : context.getString("orderStatus");
@@ -174,7 +170,69 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         return paymentResult;
     }
 
-    public JSONObject buildBusinessHead() {
+    @Override
+    public PaymentResult queryPaymentStatus(String orderId) {
+        JSONObject businessHead = buildBusinessHead();
+        JSONObject businessContext = new JSONObject(2);
+        MallOrder order = new MallOrder();
+        order.setOrderId(orderId);
+        order = orderMapper.selectOne(order);
+        if (order == null) {
+            throw new RuntimeException("unknown_order_error");
+        }
+        businessContext.put("merchantOrderNumber", order.getOrderId());
+        businessContext.put("shbOrderNumber", order.getPaymentOrderId());
+        String context = null;
+        try {
+            context = RSAUtils.verifyAndEncryptionToString(businessContext, businessHead, privateKeyString, shbPublicKeyString);
+        } catch (Exception e) {
+            throw new RuntimeException("sign_error");
+        }
+        JSONObject toPost = new JSONObject(1);
+        toPost.put("context", context);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentType(MediaType.APPLICATION_JSON);
+        HttpEntity<String> entity = new HttpEntity<>(toPost.toJSONString(), headers);
+        ResponseEntity<JSONObject> response = restTemplate.exchange(SHB_PAYMENT_BASE_URL + "/api/query/tradeOrder", HttpMethod.POST, entity, JSONObject.class);
+        PaymentResult paymentResult = new PaymentResult();
+        JSONObject responseJSON = response.getBody();
+        if (response.getStatusCode() != HttpStatus.OK || responseJSON == null) {
+            paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+            paymentResult.setResultCode("HTTP:" + response.getStatusCodeValue());
+            paymentResult.setResultMessage(response.toString());
+            return paymentResult;
+        }
+        JSONObject responseMessage = responseJSON.getJSONObject("message");
+        if (!responseJSON.getBoolean("success")) {
+            paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+            paymentResult.setResultCode(responseMessage.getString("code"));
+            paymentResult.setResultMessage(responseMessage.getString("content"));
+            return paymentResult;
+        }
+        JSONObject responseData = decodeContext(responseJSON.getString("context"));
+        if (responseData == null) {
+            throw new RuntimeException("shb_decode_error");
+        }
+        if (!verify(responseData)) {
+            throw new RuntimeException("shb_verify_error");
+        }
+        businessContext = responseData.getJSONObject("businessContext");
+        paymentResult.setPaymentOrderId(businessContext.getString("shbOrderNumber"));
+        paymentResult.setOrderId(orderId);
+        paymentResult.setResultCode(businessContext.getString("orderStatus"));
+        paymentResult.setResultMessage(businessContext.toJSONString());
+        paymentResult.setTime(new Date());
+        paymentResult.setUrl(businessContext.getString("content"));
+        paymentResult.setUserId(order.getUserId());
+        if ("WAIT".equals(businessContext.getString("orderStatus"))) {
+            paymentResult.setStatus(PaymentStatus.IN_PAY);
+        } else {
+            paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+        }
+        return paymentResult;
+    }
+
+    private JSONObject buildBusinessHead() {
         JSONObject businessHead = new JSONObject();
         businessHead.put("charset", "00");//字符集 00 : utf-8
         businessHead.put("version", "V1.0.0");//版本号
@@ -186,7 +244,7 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         return businessHead;
     }
 
-    public JSONObject buildBusinessContextFormPay(String orderId, String shbPayType, BigDecimal amount, String productInfo, String productDetail, String remark, String ip, Long userId) {
+    private JSONObject buildBusinessContextFormPay(String orderId, String shbPayType, BigDecimal amount, String productInfo, String productDetail, String remark, String ip, Long userId) {
         JSONObject businessContext = new JSONObject();
         businessContext.put("defrayalType", shbPayType);//支付方式(必填)
         businessContext.put("subMerchantNumber", SHB_MERCHANT_NUMBER);//商户号(必填)
@@ -201,7 +259,7 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         businessContext.put("commodityDetail", productDetail);//商品详情(必填)
         businessContext.put("commodityRemark", remark);//商品备注
 
-        businessContext.put("returnUrl", paymentGatewayDomain + "/mall/payment/result?orderId=" + orderId);//同步通知
+        businessContext.put("returnUrl", paymentGatewayDomain + "/mall/payment/" + orderId);//同步通知
         businessContext.put("notifyUrl", "https://" + paymentGatewayDomain + "/api/v1/mall/payment/notify/shb");//异步通知(必填)
 
         businessContext.put("terminalId", ip + userId);//设备ID
@@ -213,6 +271,67 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         return businessContext;
     }
 
-    @Value("${PAYMENT_DOMAIN:}")
+    @Value("${PAYMENT_DOMAIN}")
     private String paymentGatewayDomain;
+
+    @Value("${SHB_RSA_PUB_KEY}")
+    private String shbPublicKeyString;
+    @Value("${MTN_RSA_PRI_KEY}")
+    private String privateKeyString;
+
+    @Value("${MTN_RSA_PUB_KEY}")
+    private String publicKeyString;
+
+
+    private JSONObject decodeContext(String context) {
+        String decodedContext;
+        try {
+            decodedContext = RSAUtils.decryptByPrivateKey(context, privateKeyString);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return null;
+        }
+        return JSON.parseObject(decodedContext);
+    }
+
+    private boolean verify(JSONObject data) {
+        try {
+            return RSAUtils.verify(data.toJSONString(), shbPublicKeyString);
+        } catch (Exception e) {
+            logger.error(e.getMessage(), e);
+            return false;
+        }
+    }
+
+    /**
+     * 支付请求内容
+     *
+     * @return
+     */
+    public JSONObject buildBusinessContextFormPay() {
+        JSONObject businessContext = new JSONObject();
+        businessContext.put("defrayalType", "ALI_H5");//支付方式(必填)
+        businessContext.put("subMerchantNumber", SHB_MERCHANT_NUMBER);//商户号(必填)
+        businessContext.put("channelMapped", "HB_CIB_ONLINE");//支付通道标识(必填)
+        businessContext.put("merchantOrderNumber", System.currentTimeMillis());//商户订单号(必填),每次交易唯一
+        businessContext.put("tradeCheckCycle", "T1");//结算周期(必填)
+        businessContext.put("orderTime", new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));//订单时间(必填)
+        businessContext.put("currenciesType", "CNY");//币种：人民币(必填)
+        businessContext.put("tradeAmount", "1");//交易金额分(必填)
+
+        businessContext.put("commodityBody", "商品信息");//商品信息(必填)
+        businessContext.put("commodityDetail", "商品详情");//商品详情(必填)
+        businessContext.put("commodityRemark", "商品备注");//商品备注
+
+        businessContext.put("returnUrl", "http://www.baidu.com");//同步通知
+        businessContext.put("notifyUrl", "http://39.108.134.13:10015/api/notify/shb");//异步通知(必填)
+
+        businessContext.put("terminalId", "设备ID");//设备ID
+        businessContext.put("terminalIP", "8.8.8.8");//设备IP(必填)
+        businessContext.put("userId", "123");//用户标示,ALI_SCAN/WECHAT_SCAN必填
+
+        businessContext.put("remark", "备注");//备注
+        businessContext.put("attach", "");//附加信息
+        return businessContext;
+    }
 }
