@@ -123,11 +123,8 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         Assert.assertNotNull(order);
         Assert.assertEquals(order.getUserId(), Long.valueOf(380L));
         Assert.assertEquals(order.getMtnAmount(), 12.34);
-        try {
-            JSONObject result = orderService.submit(orderId, PayChannel.WECHAT);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        JSONObject result = orderService.submit(orderId, PayChannel.WECHAT);
+        System.out.println(result);
         order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);

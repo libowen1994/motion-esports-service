@@ -6,6 +6,8 @@ import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
 import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.NoSuchPaddingException;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.security.*;
 import java.security.spec.InvalidKeySpecException;
 import java.security.spec.PKCS8EncodedKeySpec;
@@ -15,6 +17,7 @@ public class RSAUtils {
 
     private static final String ALGORITHM = "RSA";
     private static final String SIGNATURE_ALGORITHM = "MD5withRSA";
+    private static int MAX_ENCRYPT_BLOCK = 117;
 
     /**
      * 使用指定的公钥加密数据。
@@ -31,10 +34,28 @@ public class RSAUtils {
             PublicKey publicK = keyFactory.generatePublic(x509KeySpec);
             Cipher ci = Cipher.getInstance(ALGORITHM);
             ci.init(Cipher.ENCRYPT_MODE, publicK);
-            return ci.doFinal(data);
+            int inputLen = data.length;
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            int offSet = 0;
+            byte[] cache;
+            int i = 0;
+            // 对数据分段加密
+            while (inputLen - offSet > 0) {
+                if (inputLen - offSet > MAX_ENCRYPT_BLOCK) {
+                    cache = ci.doFinal(data, offSet, MAX_ENCRYPT_BLOCK);
+                } else {
+                    cache = ci.doFinal(data, offSet, inputLen - offSet);
+                }
+                out.write(cache, 0, cache.length);
+                i++;
+                offSet = i * MAX_ENCRYPT_BLOCK;
+            }
+            byte[] encryptedData = out.toByteArray();
+            out.close();
+            return encryptedData;
         } catch (NoSuchAlgorithmException | NoSuchPaddingException | InvalidKeyException | BadPaddingException | InvalidKeySpecException e) {
             throw new IllegalStateException(e);
-        } catch (IllegalBlockSizeException e) {
+        } catch (IllegalBlockSizeException | IOException e) {
             throw new IllegalArgumentException("can not encrypt data.", e);
         }
     }
