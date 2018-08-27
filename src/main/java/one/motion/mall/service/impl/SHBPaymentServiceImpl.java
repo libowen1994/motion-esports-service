@@ -114,6 +114,7 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         paymentResult.setResultCode(responseData.getString("orderStatus"));
         paymentResult.setResultMessage(responseData.toJSONString());
         paymentResult.setTime(new Date());
+        paymentResult.setUrl(responseData.getString("content"));
         paymentResult.setUserId(order.getUserId());
         if (responseData.getString("orderStatus").equals("WAIT")) {
             paymentResult.setStatus(PaymentStatus.IN_PAY);

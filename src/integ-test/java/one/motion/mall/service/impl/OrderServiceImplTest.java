@@ -78,6 +78,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         JSONObject json = new JSONObject();
         json.put("code", 200);
         json.put("message", "success");
+        when(mockWalletService.expendMTN(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(json);
         JSONObject result = orderService.submit(orderId, PayChannel.MOTION);
         order = new MallOrder();
         order.setOrderId(orderId);
@@ -122,11 +123,11 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         Assert.assertNotNull(order);
         Assert.assertEquals(order.getUserId(), Long.valueOf(380L));
         Assert.assertEquals(order.getMtnAmount(), 12.34);
-        JSONObject json = new JSONObject();
-        json.put("code", 400);
-        json.put("message", "fail");
-        when(mockWalletService.expendMTN(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(json);
-        JSONObject result = orderService.submit(orderId, PayChannel.WECHAT);
+        try {
+            JSONObject result = orderService.submit(orderId, PayChannel.WECHAT);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);

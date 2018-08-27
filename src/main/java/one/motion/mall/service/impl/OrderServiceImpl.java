@@ -126,7 +126,8 @@ public class OrderServiceImpl implements IOrderService {
                 && status == PaymentStatus.PAID) {
             throw new RuntimeException("order_payment_status_error");
         }
-        if (orderStatus != PaymentStatus.IN_PAY && status == PaymentStatus.PAY_FAIL) {
+        if ((orderStatus != PaymentStatus.IN_PAY && orderStatus != PaymentStatus.UNPAID)
+                && status == PaymentStatus.PAY_FAIL) {
             throw new RuntimeException("order_payment_status_error");
         }
         if (orderStatus != PaymentStatus.PAID && status == PaymentStatus.REFUND) {
@@ -137,7 +138,7 @@ public class OrderServiceImpl implements IOrderService {
         }
         order.setPayStatus(status.getCode().byteValue());
         order.setPaymentOrderId(paymentResult.getPaymentOrderId());
-        order.setPayResult(StringUtils.defaultIfBlank(paymentResult.getResultCode(), "") + "_" + StringUtils.defaultIfBlank(paymentResult.getResultMessage(), ""));
+        order.setPayResult(paymentResult.getResultMessage());
         order.setCreatedAt(null);
         order.setUpdatedAt(null);
         orderMapper.updateByPrimaryKeySelective(order);
@@ -183,7 +184,18 @@ public class OrderServiceImpl implements IOrderService {
         JSONObject result = new JSONObject();
         result.put("orderId", orderId);
         if (PayType.valueOf(order.getPayType()) == PayType.MTN && channel == PayChannel.MOTION) {
-            paymentResult = mtnPaymentService.toPay(orderId, PayChannel.MOTION);
+            try {
+                paymentResult = mtnPaymentService.toPay(orderId, PayChannel.MOTION);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                paymentResult = new PaymentResult();
+                paymentResult.setOrderId(orderId);
+                paymentResult.setResultCode("500");
+                paymentResult.setResultMessage(e.getMessage());
+                paymentResult.setTime(new Date());
+                paymentResult.setUserId(order.getUserId());
+                paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+            }
             PaymentResult toPay = new PaymentResult();
             toPay.setOrderId(orderId);
             toPay.setResultCode("200");
@@ -195,7 +207,19 @@ public class OrderServiceImpl implements IOrderService {
             order = updatePaymentStatus(order, paymentResult);
             order = toExchange(order);
         } else {
-            paymentResult = shbPaymentService.toPay(orderId, channel);
+            try {
+                paymentResult = shbPaymentService.toPay(orderId, channel);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                paymentResult = new PaymentResult();
+                paymentResult.setOrderId(orderId);
+                paymentResult.setResultCode("500");
+                paymentResult.setResultMessage(e.getMessage());
+                paymentResult.setTime(new Date());
+                paymentResult.setUserId(order.getUserId());
+                paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+            }
+            updatePaymentStatus(order, paymentResult);
             result.put("url", paymentResult.getUrl());
         }
         result.put("paymentStatus", paymentResult.getResultCode());
