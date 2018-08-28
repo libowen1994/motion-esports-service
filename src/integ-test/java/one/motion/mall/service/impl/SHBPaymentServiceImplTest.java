@@ -83,7 +83,7 @@ public class SHBPaymentServiceImplTest extends AbstractTransactionalTestNGSpring
         Assert.assertEquals(order.getTotalAmount(), 9d);
         JSONObject json = orderService.submit(orderId, PayChannel.WECHAT);
         Assert.assertNotNull(json);
-        Assert.assertNotNull(json.getString("url"));
+        Assert.assertNotNull(json.getString("data"));
         order = new MallOrder();
         order.setOrderId(orderId);
         PaymentResult paymentResult = shbPaymentService.queryPaymentStatus(orderId);
