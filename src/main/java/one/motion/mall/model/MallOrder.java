@@ -96,7 +96,7 @@ public class MallOrder {
     private Double mtnAmount;
 
     /**
-     * 付款方式(1mtn付款, 2：IPS, 3：SHB)
+     * 付款方式(1mtn付款, 2：ScanPay, 3：SHB)
      */
     @Column(name = "pay_type")
     private Byte payType;
@@ -432,18 +432,18 @@ public class MallOrder {
     }
 
     /**
-     * 获取付款方式(1mtn付款, 2：IPS, 3：SHB)
+     * 获取付款方式(1mtn付款, 2：ScanPay, 3：SHB)
      *
-     * @return pay_type - 付款方式(1mtn付款, 2：IPS, 3：SHB)
+     * @return pay_type - 付款方式(1mtn付款, 2：ScanPay, 3：SHB)
      */
     public Byte getPayType() {
         return payType;
     }
 
     /**
-     * 设置付款方式(1mtn付款, 2：IPS, 3：SHB)
+     * 设置付款方式(1mtn付款, 2：ScanPay, 3：SHB)
      *
-     * @param payType 付款方式(1mtn付款, 2：IPS, 3：SHB)
+     * @param payType 付款方式(1mtn付款, 2：ScanPay, 3：SHB)
      */
     public void setPayType(Byte payType) {
         this.payType = payType;

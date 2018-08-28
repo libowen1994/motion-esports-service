@@ -37,17 +37,23 @@ public class SHBPaymentServiceImpl implements IPaymentService {
 
     @Value("${SHB_PAYMENT_BASE_URL}")
     private String SHB_PAYMENT_BASE_URL;
+    @GrpcClient("wallet-service")
+    private Channel walletServiceChannel;
+    @Value("${MOTION_WALLET_SERVICE_ADDR:}")
+    private String walletAddress;
+    @Value("${PAYMENT_DOMAIN}")
+    private String paymentGatewayDomain;
+    @Value("${SHB_RSA_PUB_KEY}")
+    private String shbPublicKeyString;
+    @Value("${MTN_RSA_PRI_KEY}")
+    private String privateKeyString;
+    @Value("${MTN_RSA_PUB_KEY}")
+    private String publicKeyString;
 
     public SHBPaymentServiceImpl(MallOrderMapper orderMapper, RestTemplate restTemplate) {
         this.orderMapper = orderMapper;
         this.restTemplate = restTemplate;
     }
-
-    @GrpcClient("wallet-service")
-    private Channel walletServiceChannel;
-
-    @Value("${MOTION_WALLET_SERVICE_ADDR:}")
-    private String walletAddress;
 
     @Override
     public PaymentResult toPay(String orderId, PayChannel channel) {
@@ -270,18 +276,6 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         businessContext.put("attach", "");//附加信息
         return businessContext;
     }
-
-    @Value("${PAYMENT_DOMAIN}")
-    private String paymentGatewayDomain;
-
-    @Value("${SHB_RSA_PUB_KEY}")
-    private String shbPublicKeyString;
-    @Value("${MTN_RSA_PRI_KEY}")
-    private String privateKeyString;
-
-    @Value("${MTN_RSA_PUB_KEY}")
-    private String publicKeyString;
-
 
     private JSONObject decodeContext(String context) {
         String decodedContext;
