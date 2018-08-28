@@ -51,11 +51,11 @@ public class OrderServiceImpl implements IOrderService {
         this.ipsPaymentService = ipsPaymentService;
     }
 
-    private String getOrderNo(Long userId, Date date) {
+    private String getOrderNo(Long userId) {
         String pattern = "000000000";
         DecimalFormat df = new DecimalFormat(pattern);
         String userIdStr = df.format(userId).substring(pattern.length() < 4 ? 0 : pattern.length() - 4, pattern.length());
-        String timestamp = date.getTime() + "";
+        String timestamp = System.currentTimeMillis() + "";
         timestamp = timestamp.substring(timestamp.length() < 8 ? 0 : timestamp.length() - 8, timestamp.length());
         return DateFormatUtils.format(new Date(), "yyyyMMdd") + timestamp + userIdStr;
     }
@@ -80,7 +80,7 @@ public class OrderServiceImpl implements IOrderService {
         if (product == null) {
             throw new RuntimeException("unknown_product_error");
         }
-        String orderId = getOrderNo(userId, new Date());
+        String orderId = getOrderNo(userId);
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order.setAmount(amount);
