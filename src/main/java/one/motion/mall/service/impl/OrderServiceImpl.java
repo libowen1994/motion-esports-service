@@ -16,7 +16,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import tk.mybatis.mapper.entity.Example;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -33,32 +32,32 @@ public class OrderServiceImpl implements IOrderService {
     private final IPaymentService shbPaymentService;
     private final IExchangeService exchangeService;
     private final IWalletService walletService;
+    private final IPaymentService ipsPaymentService;
+    private final PayType defaultCashPayType = PayType.SHB;
 
     public OrderServiceImpl(MallOrderMapper orderMapper,
                             MallProductMapper productMapper,
-                            @Qualifier("mtnPaymentService")
-                                    IPaymentService mtnPaymentService,
-                            @Qualifier("shbPaymentService")
-                                    IPaymentService shbPaymentService,
                             IExchangeService exchangeService,
-                            IWalletService walletService) {
+                            IWalletService walletService,
+                            @Qualifier("mtnPaymentService") IPaymentService mtnPaymentService,
+                            @Qualifier("shbPaymentService") IPaymentService shbPaymentService,
+                            @Qualifier("ipsPaymentService") IPaymentService ipsPaymentService) {
         this.orderMapper = orderMapper;
         this.productMapper = productMapper;
         this.mtnPaymentService = mtnPaymentService;
         this.shbPaymentService = shbPaymentService;
         this.exchangeService = exchangeService;
         this.walletService = walletService;
+        this.ipsPaymentService = ipsPaymentService;
     }
 
     private String getOrderNo(Long userId, Date date) {
-        Example example = new Example(MallOrder.class);
-        String dateStr = DateFormatUtils.format(date, "yyyy-MM-dd");
-        example.and().andBetween("createdAt", dateStr + " 00:00:00", dateStr + " 23:59:59").andEqualTo("userId", userId);
-        int count = orderMapper.selectCountByExample(example);
-        DecimalFormat df = new DecimalFormat("0000000");
-        DecimalFormat df2 = new DecimalFormat("0000");
-        return df.format(userId)
-                + DateFormatUtils.format(new Date(), "yyyyMMddHHmmss") + df2.format(count);
+        String pattern = "000000000";
+        DecimalFormat df = new DecimalFormat(pattern);
+        String userIdStr = df.format(userId).substring(pattern.length() < 4 ? 0 : pattern.length() - 4, pattern.length());
+        String timestamp = date.getTime() + "";
+        timestamp = timestamp.substring(timestamp.length() < 8 ? 0 : timestamp.length() - 8, timestamp.length());
+        return DateFormatUtils.format(new Date(), "yyyyMMdd") + timestamp + userIdStr;
     }
 
     @Override
@@ -180,7 +179,7 @@ public class OrderServiceImpl implements IOrderService {
         if (order == null) {
             throw new RuntimeException("unknown_order_error");
         }
-        PaymentResult paymentResult;
+        PaymentResult paymentResult = null;
         JSONObject result = new JSONObject();
         result.put("orderId", orderId);
         if (PayType.valueOf(order.getPayType()) == PayType.MTN && channel == PayChannel.MOTION) {
@@ -208,19 +207,30 @@ public class OrderServiceImpl implements IOrderService {
             order = toExchange(order);
         } else {
             try {
-                paymentResult = shbPaymentService.toPay(orderId, channel);
+                if (defaultCashPayType == PayType.SHB) {
+                    paymentResult = shbPaymentService.toPay(orderId, channel);
+                } else if (defaultCashPayType == PayType.IPS) {
+                    paymentResult = ipsPaymentService.toPay(orderId, channel);
+                } else {
+                    paymentResult = new PaymentResult();
+                    paymentResult.setOrderId(orderId);
+                    paymentResult.setResultCode("500");
+                    paymentResult.setResultMessage("unsupported_pay_type");
+                    paymentResult.setTime(new Date());
+                    paymentResult.setUserId(order.getUserId());
+                    paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+                }
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 paymentResult = new PaymentResult();
                 paymentResult.setOrderId(orderId);
-                paymentResult.setResultCode("500");
                 paymentResult.setResultMessage(e.getMessage());
                 paymentResult.setTime(new Date());
                 paymentResult.setUserId(order.getUserId());
                 paymentResult.setStatus(PaymentStatus.PAY_FAIL);
             }
             updatePaymentStatus(order, paymentResult);
-            result.put("url", paymentResult.getUrl());
+            result.put("data", paymentResult.getData());
         }
         result.put("paymentStatus", paymentResult.getResultCode());
         result.put("paymentMessage", paymentResult.getResultMessage());
@@ -295,6 +305,9 @@ public class OrderServiceImpl implements IOrderService {
         PaymentResult paymentResult = null;
         if (payType == PayType.SHB) {
             paymentResult = shbPaymentService.processPaymentNotify(data);
+        }
+        if (payType == PayType.IPS) {
+            paymentResult = ipsPaymentService.processPaymentNotify(data);
         }
         if (paymentResult == null) {
             throw new RuntimeException("payment_notify_process_error");

@@ -14,7 +14,7 @@ public class PaymentResult {
     private PaymentStatus status;
     private String resultCode;
     private String resultMessage;
-    private String url;
+    private String data;
 
     public BigDecimal getFee() {
         return fee;
@@ -24,12 +24,12 @@ public class PaymentResult {
         this.fee = fee;
     }
 
-    public String getUrl() {
-        return url;
+    public String getData() {
+        return data;
     }
 
-    public void setUrl(String url) {
-        this.url = url;
+    public void setData(String data) {
+        this.data = data;
     }
 
     public String getPaymentOrderId() {

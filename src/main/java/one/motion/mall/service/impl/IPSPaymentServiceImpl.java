@@ -136,7 +136,7 @@ public class IPSPaymentServiceImpl implements IPaymentService {
                 paymentResult.setStatus(PaymentStatus.PAY_FAIL);
             } else {
                 paymentResult.setStatus(PaymentStatus.IN_PAY);
-                paymentResult.setUrl(respBody.getQrCode());
+                paymentResult.setData(respBody.getQrCode());
             }
             paymentResult.setOrderId(orderId);
             paymentResult.setResultCode(responseHead.getRspCode());

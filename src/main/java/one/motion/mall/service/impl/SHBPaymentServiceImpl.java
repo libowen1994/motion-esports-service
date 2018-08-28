@@ -121,7 +121,7 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         paymentResult.setResultCode(businessContext.getString("orderStatus"));
         paymentResult.setResultMessage(businessContext.toJSONString());
         paymentResult.setTime(new Date());
-        paymentResult.setUrl(businessContext.getString("content"));
+        paymentResult.setData(businessContext.getString("content"));
         paymentResult.setUserId(order.getUserId());
         if ("WAIT".equals(businessContext.getString("orderStatus"))) {
             paymentResult.setStatus(PaymentStatus.IN_PAY);
@@ -228,7 +228,7 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         paymentResult.setResultCode(businessContext.getString("orderStatus"));
         paymentResult.setResultMessage(businessContext.toJSONString());
         paymentResult.setTime(new Date());
-        paymentResult.setUrl(businessContext.getString("content"));
+        paymentResult.setData(businessContext.getString("content"));
         paymentResult.setUserId(order.getUserId());
         if ("WAIT".equals(businessContext.getString("orderStatus"))) {
             paymentResult.setStatus(PaymentStatus.IN_PAY);
