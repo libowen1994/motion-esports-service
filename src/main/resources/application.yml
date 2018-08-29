@@ -25,6 +25,12 @@ mapper:
   not-empty: false
   identity: MYSQL
 
+pagehelper:
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+
 spring:
   profiles:
     active: dev
@@ -62,3 +68,8 @@ spring:
       cacheServerConfiguration: true
       elideSetAutoCommits: true
       maintainTimeStats: false
+
+logging:
+  level:
+    one.motion: trace
+    # org.springframework.security: debug

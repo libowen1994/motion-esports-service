@@ -1,5 +1,7 @@
 package one.motion.mall.service.impl;
 
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import one.motion.mall.dto.*;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.mapper.MallProductCategoryMapper;
@@ -13,6 +15,7 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import tk.mybatis.mapper.entity.Example;
@@ -20,11 +23,13 @@ import tk.mybatis.mapper.entity.Example;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Date;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class OrderServiceImpl implements IOrderService {
-    private final MallOrderMapper orderMapper;
+    @Autowired
+    private MallOrderMapper orderMapper;
     private final MallProductMapper productMapper;
     private final MallProductCategoryMapper productCategoryMapper;
     private final Logger logger = LoggerFactory.getLogger(getClass());
@@ -286,5 +291,14 @@ public class OrderServiceImpl implements IOrderService {
         }
         order = exchangeFinished(order, exchangeResult);
         return order;
+    }
+
+    @Override
+    public PageInfo<MallOrder> selectPage(MallOrder order,Integer offset, Integer limit) {
+        int pageNum = offset / limit + 1;
+        PageHelper.startPage(pageNum,limit);
+        Example ex = new Example(MallOrder.class);
+        List<MallOrder> list = orderMapper.select(order);
+        return new PageInfo<>(list);
     }
 }
