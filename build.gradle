@@ -62,6 +62,7 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-cache')
     compile('org.springframework.boot:spring-boot-starter-data-redis')
     compile('org.springframework.boot:spring-boot-starter-validation')
+    compile('org.springframework.kafka:spring-kafka')
     //compile("net.devh:grpc-server-spring-boot-starter:1.4.1.RELEASE")
     compile("net.devh:grpc-client-spring-boot-starter:1.4.1.RELEASE")
     compile("io.grpc:grpc-netty:${grpcVersion}")
@@ -74,30 +75,15 @@ dependencies {
     compile('commons-io:commons-io:2.6')
     compile('org.apache.commons:commons-lang3:3.7')
     compile('commons-codec:commons-codec:1.11')
+    compile('org.apache.axis:axis:1.4')
+    compile('org.apache.axis:axis-jaxrpc:1.4')
+    compile('org.apache.axis:axis-saaj:1.4')
+    compile('axis:axis-wsdl4j:1.5.1')
+    compile('commons-discovery:commons-discovery:0.2')
     runtime('org.springframework.boot:spring-boot-devtools')
     runtime('mysql:mysql-connector-java')
     testCompile('org.springframework.boot:spring-boot-starter-test')
     testCompile('org.testng:testng:6.8.13')
-
-    compile group: 'org.apache.axis',
-            name: 'axis',
-            version: '1.4'
-
-    compile group: 'org.apache.axis',
-            name: 'axis-jaxrpc',
-            version: '1.4'
-
-    compile group: 'org.apache.axis',
-            name: 'axis-saaj',
-            version: '1.4'
-
-    compile group: 'axis',
-            name: 'axis-wsdl4j',
-            version: '1.5.1'
-
-    compile group: 'commons-discovery',
-            name: 'commons-discovery',
-            version: '0.2'
 }
 
 protobuf {

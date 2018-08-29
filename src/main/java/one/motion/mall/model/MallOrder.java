@@ -96,7 +96,7 @@ public class MallOrder {
     private Double mtnAmount;
 
     /**
-     * 付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * 付款方式(1mtn付款, 2：IPS, 3：SHB)
      */
     @Column(name = "pay_type")
     private Byte payType;
@@ -124,6 +124,16 @@ public class MallOrder {
      */
     @Column(name = "exchange_status")
     private Byte exchangeStatus;
+
+    /**
+     * 备注
+     */
+    private String remark;
+
+    /**
+     * 附加字段
+     */
+    private String attach;
 
     @Column(name = "created_at")
     private Date createdAt;
@@ -432,18 +442,18 @@ public class MallOrder {
     }
 
     /**
-     * 获取付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * 获取付款方式(1mtn付款, 2：IPS, 3：SHB)
      *
-     * @return pay_type - 付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * @return pay_type - 付款方式(1mtn付款, 2：IPS, 3：SHB)
      */
     public Byte getPayType() {
         return payType;
     }
 
     /**
-     * 设置付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * 设置付款方式(1mtn付款, 2：IPS, 3：SHB)
      *
-     * @param payType 付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * @param payType 付款方式(1mtn付款, 2：IPS, 3：SHB)
      */
     public void setPayType(Byte payType) {
         this.payType = payType;
@@ -519,6 +529,42 @@ public class MallOrder {
      */
     public void setExchangeStatus(Byte exchangeStatus) {
         this.exchangeStatus = exchangeStatus;
+    }
+
+    /**
+     * 获取备注
+     *
+     * @return remark - 备注
+     */
+    public String getRemark() {
+        return remark;
+    }
+
+    /**
+     * 设置备注
+     *
+     * @param remark 备注
+     */
+    public void setRemark(String remark) {
+        this.remark = remark == null ? null : remark.trim();
+    }
+
+    /**
+     * 获取附加字段
+     *
+     * @return attach - 附加字段
+     */
+    public String getAttach() {
+        return attach;
+    }
+
+    /**
+     * 设置附加字段
+     *
+     * @param attach 附加字段
+     */
+    public void setAttach(String attach) {
+        this.attach = attach == null ? null : attach.trim();
     }
 
     /**

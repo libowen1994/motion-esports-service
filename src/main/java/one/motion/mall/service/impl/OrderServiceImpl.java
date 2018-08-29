@@ -1,6 +1,8 @@
 package one.motion.mall.service.impl;
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import one.motion.mall.config.KafkaConfig;
 import one.motion.mall.dto.*;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.mapper.MallProductMapper;
@@ -12,14 +14,17 @@ import one.motion.mall.service.IPaymentService;
 import one.motion.mall.service.IWalletService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Date;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -61,7 +66,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public String checkout(Long userId, String productId, Integer amount, PayType payType) {
+    public String checkout(Long userId, String attach, String productId, Integer amount, PayType payType) {
         if (userId == null) {
             throw new RuntimeException("unknown_userId_error");
         }
@@ -93,6 +98,7 @@ public class OrderServiceImpl implements IOrderService {
         order.setProductId(product.getProductId());
         order.setProductName(product.getName());
         order.setPayType(payType.getCode().byteValue());
+        order.setAttach(attach);
         BigDecimal total = BigDecimal.valueOf(amount).multiply(BigDecimal.valueOf(product.getPrice()));
         if (product.getDiscount() != null) {
             total = total.multiply(BigDecimal.valueOf(product.getDiscount()));
@@ -328,12 +334,11 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public MallOrder exchangeNotify(String data) {
-        if (data == null) {
+    public MallOrder exchangeNotify(ExchangeResult result) {
+        if (result == null) {
             throw new RuntimeException("unknown_data_error");
         }
-        ExchangeResult exchangeResult = exchangeService.processExchangeNotify(data);
-        String orderId = exchangeResult.getOrderId();
+        String orderId = result.getOrderId();
         if (StringUtils.isBlank(orderId)) {
             throw new RuntimeException("unknown_orderId_error");
         }
@@ -343,7 +348,19 @@ public class OrderServiceImpl implements IOrderService {
         if (order == null) {
             throw new RuntimeException("unknown_order_error");
         }
-        order = updateExchangeStatus(order, exchangeResult);
+        order = updateExchangeStatus(order, result);
         return order;
+    }
+
+    @KafkaListener(topics = KafkaConfig.MALL_EXCHANGE_NOTIFY_TOPIC)
+    public void processExchangeNotify(ConsumerRecord<?, String> cr) {
+        Optional<String> kafkaMessage = Optional.ofNullable(cr.value());
+        if (kafkaMessage.isPresent()) {
+            String message = kafkaMessage.get();
+            logger.info("record =" + cr);
+            logger.info("message =" + message);
+            ExchangeResult exchangeResult = JSON.parseObject(message, ExchangeResult.class);
+            this.exchangeNotify(exchangeResult);
+        }
     }
 }

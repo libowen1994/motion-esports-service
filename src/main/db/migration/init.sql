@@ -7,7 +7,7 @@
 #
 # Host: 127.0.0.1 (MySQL 5.7.23)
 # Database: motion_mega_db
-# Generation Time: 2018-08-27 07:16:21 +0000
+# Generation Time: 2018-08-29 03:12:39 +0000
 # ************************************************************
 
 
@@ -49,6 +49,8 @@ CREATE TABLE `mall_order` (
   `exchange_order_id` varchar(50) NOT NULL DEFAULT '' COMMENT '兑换订单号',
   `exchange_status` tinyint(1) NOT NULL COMMENT '订单状态：1未兑换，2兑换进行中，2已兌換成功，3兑换失败',
   `exchange_result` text COMMENT '兑换结果',
+  `remark` varchar(255) DEFAULT NULL COMMENT '备注',
+  `attach` varchar(255) DEFAULT NULL COMMENT '附加字段',
   `created_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP,
   `updated_at` datetime NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   PRIMARY KEY (`id`),

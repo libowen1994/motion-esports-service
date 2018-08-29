@@ -117,6 +117,7 @@ name           | description
 ---            | ---
 SPRING_PROFILES_ACTIVE| 生产环境: prod, 测试环境: test
 MOTION_WALLET_SERVICE_ADDR | motion-wallet-service 地址，不用http 
+KAFKA_HOSTS | kafka brokers 多个broker用,分开
 REDIS_HOST     | redis主机
 REDIS_PASSWORD | redis密码
 MYSQL_HOST     | mysql主机
