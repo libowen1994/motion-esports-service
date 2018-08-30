@@ -8,7 +8,7 @@ import one.motion.mall.model.MallOrder;
 
 public interface IOrderService {
 
-    String checkout(Long userId, String attach, String productId, Integer amount, PayType payType);
+    String checkout(Long userId, String ipAddress, String attach, String productId, Integer amount, PayType payType);
 
     JSONObject submit(String orderId, PayChannel channel);
 

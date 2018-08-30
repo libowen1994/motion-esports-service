@@ -66,7 +66,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public String checkout(Long userId, String attach, String productId, Integer amount, PayType payType) {
+    public String checkout(Long userId, String ipAddress, String attach, String productId, Integer amount, PayType payType) {
         if (userId == null) {
             throw new RuntimeException("unknown_userId_error");
         }
@@ -99,6 +99,7 @@ public class OrderServiceImpl implements IOrderService {
         order.setProductName(product.getName());
         order.setPayType(payType.getCode().byteValue());
         order.setAttach(attach);
+        order.setIpAddress(ipAddress);
         BigDecimal total = BigDecimal.valueOf(amount).multiply(BigDecimal.valueOf(product.getPrice()));
         if (product.getDiscount() != null) {
             total = total.multiply(BigDecimal.valueOf(product.getDiscount()));

@@ -3,6 +3,8 @@ package one.motion.mall.utils;
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import org.apache.commons.codec.binary.Base64;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import javax.crypto.Cipher;
 import java.io.ByteArrayOutputStream;
@@ -20,6 +22,8 @@ import java.util.TreeMap;
  * Created by frank on 2017/9/29.
  */
 public class RSAUtils {
+
+    private static Logger logger = LoggerFactory.getLogger(RSAUtils.class);
 
 
     /**
@@ -342,6 +346,8 @@ public class RSAUtils {
         JSONObject context = new JSONObject();
         context.put("businessContext", businessContext);
         context.put("businessHead", businessHead);
+        logger.info("head: {}", businessHead);
+        logger.info("body: {}", businessContext);
         return encryptByPublicKey(context.toString(), publicKey);
 
     }

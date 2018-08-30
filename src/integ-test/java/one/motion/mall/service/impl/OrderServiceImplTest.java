@@ -68,7 +68,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
     @Test
     public void testMtnBuySuccess() {
         when(mockWalletService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
-        String orderId = orderService.checkout(380L, "", "12345", 1, PayType.MTN);
+        String orderId = orderService.checkout(380L, "127.0.0.1", "", "12345", 1, PayType.MTN);
         Assert.assertNotNull(orderId);
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
@@ -93,7 +93,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
     @Test
     public void testMtnBuyFail() {
         when(mockWalletService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
-        String orderId = orderService.checkout(380L, "1", "12345", 1, PayType.MTN);
+        String orderId = orderService.checkout(380L, "127.0.0.1", "1", "12345", 1, PayType.MTN);
         Assert.assertNotNull(orderId);
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
@@ -121,7 +121,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
     @Test
     public void testToPay() {
         when(mockWalletService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
-        String orderId = orderService.checkout(380L, "", "12345", 1, PayType.MTN);
+        String orderId = orderService.checkout(380L, "127.0.0.1", "", "12345", 1, PayType.MTN);
         Assert.assertNotNull(orderId);
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
