@@ -114,6 +114,12 @@ public class MallOrder {
     private Byte payStatus;
 
     /**
+     * 支付结果代码
+     */
+    @Column(name = "pay_result_code")
+    private String payResultCode;
+
+    /**
      * 兑换订单号
      */
     @Column(name = "exchange_order_id")
@@ -124,6 +130,12 @@ public class MallOrder {
      */
     @Column(name = "exchange_status")
     private Byte exchangeStatus;
+
+    /**
+     * 兑换结果代码
+     */
+    @Column(name = "exchange_result_code")
+    private String exchangeResultCode;
 
     /**
      * 备注
@@ -496,6 +508,24 @@ public class MallOrder {
     }
 
     /**
+     * 获取支付结果代码
+     *
+     * @return pay_result_code - 支付结果代码
+     */
+    public String getPayResultCode() {
+        return payResultCode;
+    }
+
+    /**
+     * 设置支付结果代码
+     *
+     * @param payResultCode 支付结果代码
+     */
+    public void setPayResultCode(String payResultCode) {
+        this.payResultCode = payResultCode == null ? null : payResultCode.trim();
+    }
+
+    /**
      * 获取兑换订单号
      *
      * @return exchange_order_id - 兑换订单号
@@ -529,6 +559,24 @@ public class MallOrder {
      */
     public void setExchangeStatus(Byte exchangeStatus) {
         this.exchangeStatus = exchangeStatus;
+    }
+
+    /**
+     * 获取兑换结果代码
+     *
+     * @return exchange_result_code - 兑换结果代码
+     */
+    public String getExchangeResultCode() {
+        return exchangeResultCode;
+    }
+
+    /**
+     * 设置兑换结果代码
+     *
+     * @param exchangeResultCode 兑换结果代码
+     */
+    public void setExchangeResultCode(String exchangeResultCode) {
+        this.exchangeResultCode = exchangeResultCode == null ? null : exchangeResultCode.trim();
     }
 
     /**

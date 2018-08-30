@@ -24,8 +24,10 @@
     <result column="pay_type" jdbcType="TINYINT" property="payType" />
     <result column="payment_order_id" jdbcType="VARCHAR" property="paymentOrderId" />
     <result column="pay_status" jdbcType="TINYINT" property="payStatus" />
+    <result column="pay_result_code" jdbcType="VARCHAR" property="payResultCode" />
     <result column="exchange_order_id" jdbcType="VARCHAR" property="exchangeOrderId" />
     <result column="exchange_status" jdbcType="TINYINT" property="exchangeStatus" />
+    <result column="exchange_result_code" jdbcType="VARCHAR" property="exchangeResultCode" />
     <result column="remark" jdbcType="VARCHAR" property="remark" />
     <result column="attach" jdbcType="VARCHAR" property="attach" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />

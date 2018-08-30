@@ -145,6 +145,7 @@ public class OrderServiceImpl implements IOrderService {
         order.setPayStatus(status.getCode().byteValue());
         order.setPaymentOrderId(paymentResult.getPaymentOrderId());
         order.setPayResult(paymentResult.getResultMessage());
+        order.setPayResultCode(paymentResult.getResultCode());
         order.setCreatedAt(null);
         order.setUpdatedAt(null);
         orderMapper.updateByPrimaryKeySelective(order);
@@ -171,7 +172,8 @@ public class OrderServiceImpl implements IOrderService {
         }
         order.setExchangeStatus(status.getCode().byteValue());
         order.setExchangeOrderId(exchangeResult.getExchangeOrderId());
-        order.setExchangeResult(StringUtils.defaultIfBlank(exchangeResult.getResultCode(), "") + "_" + StringUtils.defaultIfBlank(exchangeResult.getResultMessage(), ""));
+        order.setExchangeResult(exchangeResult.getResultMessage());
+        order.setExchangeResultCode(exchangeResult.getResultCode());
         order.setCreatedAt(null);
         order.setUpdatedAt(null);
         orderMapper.updateByPrimaryKeySelective(order);
