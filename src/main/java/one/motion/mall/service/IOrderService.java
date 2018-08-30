@@ -10,7 +10,7 @@ public interface IOrderService {
 
     String checkout(Long userId, String ipAddress, String attach, String productId, Integer amount, PayType payType);
 
-    JSONObject submit(String orderId, PayChannel channel);
+    JSONObject submit(String orderId, boolean isMobile, PayChannel channel);
 
     MallOrder refund(String orderId);
 

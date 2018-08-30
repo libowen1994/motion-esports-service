@@ -81,7 +81,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         json.put("code", 200);
         json.put("message", "success");
         when(mockWalletService.expendMTN(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(json);
-        JSONObject result = orderService.submit(orderId, PayChannel.MOTION);
+        JSONObject result = orderService.submit(orderId, false, PayChannel.MOTION);
         order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
@@ -105,7 +105,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         json.put("code", 400);
         json.put("message", "fail");
         when(mockWalletService.expendMTN(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(json);
-        JSONObject result = orderService.submit(orderId, PayChannel.MOTION);
+        JSONObject result = orderService.submit(orderId, false, PayChannel.MOTION);
         order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
@@ -130,7 +130,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         Assert.assertEquals(order.getUserId(), Long.valueOf(380L));
         Assert.assertEquals(order.getMtnAmount(), 12.34);
         Assert.assertEquals(order.getTotalAmount(), 9d);
-        JSONObject json = orderService.submit(orderId, PayChannel.WECHAT);
+        JSONObject json = orderService.submit(orderId, false, PayChannel.WECHAT);
         logger.info(json);
         Assert.assertNotNull(json);
         PaymentResult paymentResult = shbPaymentService.queryPaymentStatus(orderId);

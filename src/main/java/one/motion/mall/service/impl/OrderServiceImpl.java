@@ -179,7 +179,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public JSONObject submit(String orderId, PayChannel channel) {
+    public JSONObject submit(String orderId, boolean isMobile, PayChannel channel) {
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
@@ -191,7 +191,7 @@ public class OrderServiceImpl implements IOrderService {
         result.put("orderId", orderId);
         if (PayType.valueOf(order.getPayType()) == PayType.MTN && channel == PayChannel.MOTION) {
             try {
-                paymentResult = mtnPaymentService.toPay(orderId, PayChannel.MOTION);
+                paymentResult = mtnPaymentService.toPay(orderId, isMobile, PayChannel.MOTION);
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 paymentResult = new PaymentResult();
@@ -215,9 +215,9 @@ public class OrderServiceImpl implements IOrderService {
         } else {
             try {
                 if (defaultCashPayType == PayType.SHB) {
-                    paymentResult = shbPaymentService.toPay(orderId, channel);
+                    paymentResult = shbPaymentService.toPay(orderId, isMobile, channel);
                 } else if (defaultCashPayType == PayType.IPS) {
-                    paymentResult = ipsPaymentService.toPay(orderId, channel);
+                    paymentResult = ipsPaymentService.toPay(orderId, isMobile, channel);
                 } else {
                     paymentResult = new PaymentResult();
                     paymentResult.setOrderId(orderId);

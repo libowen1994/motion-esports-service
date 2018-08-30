@@ -59,7 +59,7 @@ public class SHBPaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public PaymentResult toPay(String orderId, PayChannel channel) {
+    public PaymentResult toPay(String orderId, boolean isMobile, PayChannel channel) {
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
@@ -70,11 +70,20 @@ public class SHBPaymentServiceImpl implements IPaymentService {
             throw new RuntimeException("order_status_error");
         }
         String payType = "";
-        if (channel == PayChannel.ALIPAY) {
-            payType = "ALI_NATIVE";
-        }
-        if (channel == PayChannel.WECHAT) {
-            payType = "WECHAT_NATIVE";
+        if (isMobile) {
+            if (channel == PayChannel.ALIPAY) {
+                payType = "ALI_JSAPI";
+            }
+            if (channel == PayChannel.WECHAT) {
+                payType = "WECHAT_JSAPI";
+            }
+        } else {
+            if (channel == PayChannel.ALIPAY) {
+                payType = "ALI_NATIVE";
+            }
+            if (channel == PayChannel.WECHAT) {
+                payType = "WECHAT_NATIVE";
+            }
         }
         JSONObject businessHead = buildBusinessHead();
 
