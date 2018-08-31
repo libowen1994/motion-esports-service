@@ -69,7 +69,6 @@ pipeline {
             when { branch 'master' }
             steps {
                 script {
-                    def buildTag=sh(script:'cat .build', returnStdout: true).trim()
                     build job: 'Devops/motion-deployer', parameters: [string(name: 'artifactId', value: "${env.ARTIFACTID}"), string(name: 'build', value: buildTag)], wait: false
                 }
             }
@@ -79,7 +78,6 @@ pipeline {
             when { branch 'develop' }
             steps {
                 script {
-                    def buildTag=sh(script:'cat .build', returnStdout: true).trim()
                     build job: 'Devops/motion-dev-deployer', parameters: [string(name: 'artifactId', value: "${env.ARTIFACTID}"), string(name: 'build', value: buildTag)], wait: false
                 }
             }
