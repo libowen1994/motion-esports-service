@@ -55,7 +55,6 @@ pipeline {
         }
 
         stage('Publish') {
-            when { branch 'master' }
             steps {
                 echo "Publishing artifacts..."
                 script {
