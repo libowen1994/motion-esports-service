@@ -125,7 +125,8 @@ public class OrderServiceImpl implements IOrderService {
         if (orderStatus == null) {
             throw new RuntimeException("unknown_order_status_error");
         }
-        if (orderStatus != PaymentStatus.UNPAID && status == PaymentStatus.IN_PAY) {
+        if ((orderStatus != PaymentStatus.UNPAID && orderStatus != PaymentStatus.IN_PAY)
+                && status == PaymentStatus.IN_PAY) {
             throw new RuntimeException("order_payment_status_error");
         }
         if ((orderStatus != PaymentStatus.IN_PAY && orderStatus != PaymentStatus.PAY_FAIL)
@@ -161,7 +162,8 @@ public class OrderServiceImpl implements IOrderService {
         if (orderExchangeStatus == null) {
             throw new RuntimeException("unknown_order_exchange_status_error");
         }
-        if (orderExchangeStatus != ExchangeStatus.NOT_EXCHANGED && status == ExchangeStatus.EXCHANGING) {
+        if ((orderExchangeStatus != ExchangeStatus.NOT_EXCHANGED && orderExchangeStatus != ExchangeStatus.EXCHANGING)
+                && status == ExchangeStatus.EXCHANGING) {
             throw new RuntimeException("order_exchange_status_error");
         }
         if (orderExchangeStatus != ExchangeStatus.EXCHANGING && status == ExchangeStatus.EXCHANGE_FAIL) {
