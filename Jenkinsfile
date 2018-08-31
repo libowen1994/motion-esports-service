@@ -26,7 +26,7 @@ pipeline {
                     def gitMyCount = sh(script:'git rev-list --count HEAD', returnStdout: true).trim()
                     def gitMyHash = sh(script:'git rev-parse --short HEAD', returnStdout: true).trim()
                     buildTag = env.BRANCH_NAME + "." + gitMyCount + "." + gitMyHash
-                    sh "./gradlew clean build"
+                    sh "./gradlew clean build -x integrationTest"
                 }
             }
         }
@@ -48,13 +48,14 @@ pipeline {
                         sh 'sleep 15s'
                         sh 'docker-compose -f docker-compose.ci.yaml exec -T app gradle --no-daemon clean integrationTest'
                     } finally {
-                        sh 'docker-compose down'
+                        sh 'docker-compose -f docker-compose.ci.yaml down'
                     }
                 }
             }
         }
 
         stage('Publish') {
+            when { branch 'master' }
             steps {
                 echo "Publishing artifacts..."
                 script {
@@ -63,12 +64,12 @@ pipeline {
                 }
             }
         }
-        stage('Deploy') {
-            when { branch 'master' }
-            steps {
-                build job: 'Devops/motion-deployer', parameters: [string(name: 'artifactId', value: artifactId), string(name: 'build', value: buildTag)], wait: false
-            }
-        }
+        //stage('Deploy') {
+        //    when { branch 'master' }
+        //    steps {
+        //        build job: 'Devops/motion-deployer', parameters: [string(name: 'artifactId', value: artifactId), string(name: 'build', value: buildTag)], wait: false
+        //    }
+        //}
     }
 
     post {

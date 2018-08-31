@@ -2,7 +2,7 @@ server:
   port: 8080
 management:
   server:
-    port: 9090
+    port: 0
 grpc:
   client:
     wallet-service:
@@ -25,6 +25,11 @@ mapper:
   not-empty: false
   identity: MYSQL
 
+logging:
+  level:
+    tk.mybatis: debug
+    one.motion.mall.mapper: debug
+
 spring:
   profiles:
     active: dev
@@ -43,7 +48,7 @@ spring:
         max-active: 8
         min-idle: 1
   kafka:
-    bootstrap-servers: ${KAFKA_HOSTS:127.0.0.1:9092}
+    bootstrap-servers: ${KAFKA_HOSTS:kafka:9092}
     producer:
       retries: 0
       buffer-memory: 33554432

@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-generator-config_1_0.dtd">
 <generatorConfiguration>
     <context id="Mysql" targetRuntime="MyBatis3Simple" defaultModelType="flat">
-        <property name="javaFileEncoding" value="UTF-8" /><!--解决注释中文乱码-->
+        <property name="javaFileEncoding" value="UTF-8"/><!--解决注释中文乱码-->
         <plugin type="tk.mybatis.mapper.generator.MapperPlugin">
             <property name="mappers" value="tk.mybatis.mapper.common.Mapper,tk.mybatis.mapper.common.MySqlMapper"/>
             <!-- caseSensitive默认false，当数据库表名区分大小写时，可以将该属性设置为true -->
@@ -18,7 +18,7 @@
 
         <!-- config local dev database -->
         <jdbcConnection driverClass="com.mysql.jdbc.Driver"
-                        connectionURL="jdbc:mysql://localhost:3306/motion_mega_db"
+                        connectionURL="jdbc:mysql://localhost:3306/motion_mega_db?tinyInt1isBit=false"
                         userId="root"
                         password="root">
         </jdbcConnection>
@@ -42,11 +42,11 @@
         </javaClientGenerator>
 
         <!-- ％ 表示所有的表 -->
-      <!--  <table tableName="%">
-            <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
-        </table>-->
-         <!--single table generation with custom Object Name-->
-        <table tableName="game_tag">
+        <!--  <table tableName="%">
+              <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
+          </table>-->
+        <!--single table generation with custom Object Name-->
+        <table tableName="mall_order">
             <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
         </table>
     </context>

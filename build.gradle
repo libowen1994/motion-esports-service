@@ -25,6 +25,7 @@ group = 'one.motion.services'
 version = '1.0.0'
 sourceCompatibility = 1.8
 
+
 repositories {
     mavenCentral()
 }
@@ -61,7 +62,8 @@ dependencies {
     compile('org.springframework.boot:spring-boot-starter-cache')
     compile('org.springframework.boot:spring-boot-starter-data-redis')
     compile('org.springframework.boot:spring-boot-starter-validation')
-    compile("net.devh:grpc-server-spring-boot-starter:1.4.1.RELEASE")
+    compile('org.springframework.kafka:spring-kafka')
+    //compile("net.devh:grpc-server-spring-boot-starter:1.4.1.RELEASE")
     compile("net.devh:grpc-client-spring-boot-starter:1.4.1.RELEASE")
     compile("io.grpc:grpc-netty:${grpcVersion}")
     compile("io.grpc:grpc-protobuf:${grpcVersion}")
@@ -72,10 +74,18 @@ dependencies {
     compile('com.alibaba:fastjson:1.2.47')
     compile('commons-io:commons-io:2.6')
     compile('org.apache.commons:commons-lang3:3.7')
+    compile('commons-codec:commons-codec:1.11')
+    compile('org.apache.axis:axis:1.4')
+    compile('org.apache.axis:axis-jaxrpc:1.4')
+    compile('org.apache.axis:axis-saaj:1.4')
+    compile('axis:axis-wsdl4j:1.5.1')
+    compile('commons-discovery:commons-discovery:0.2')
     runtime('org.springframework.boot:spring-boot-devtools')
     runtime('mysql:mysql-connector-java')
     testCompile('org.springframework.boot:spring-boot-starter-test')
+    testCompile('org.testng:testng:6.8.13')
 }
+
 protobuf {
     protoc {
         artifact = "com.google.protobuf:protoc:3.5.1-1"
@@ -112,9 +122,11 @@ task mybatisGenerate {
         }
     }
 }
+
 //Create the task that runs the integration tests found from the
 //configured source directory and uses the correct classpath.
 task integrationTest(type: Test) {
+    useTestNG()
     testClassesDirs = sourceSets.integrationTest.output.classesDirs
     classpath = sourceSets.integrationTest.runtimeClasspath
     //If you want to ensure that integration tests are run every time when you invoke
