@@ -1,24 +1,27 @@
 package one.motion.mall.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import one.motion.mall.dto.*;
 import one.motion.mall.mapper.MallOrderMapper;
-import one.motion.mall.mapper.MallProductCategoryMapper;
 import one.motion.mall.mapper.MallProductMapper;
 import one.motion.mall.model.MallOrder;
 import one.motion.mall.model.MallProduct;
 import one.motion.mall.service.IExchangeService;
 import one.motion.mall.service.IOrderService;
 import one.motion.mall.service.IPaymentService;
+import one.motion.mall.service.IWalletService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Service;
-import org.springframework.web.client.RestTemplate;
 import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.weekend.Weekend;
+import tk.mybatis.mapper.weekend.WeekendCriteria;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
@@ -31,29 +34,38 @@ public class OrderServiceImpl implements IOrderService {
     @Autowired
     private MallOrderMapper orderMapper;
     private final MallProductMapper productMapper;
-    private final MallProductCategoryMapper productCategoryMapper;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    private final IPaymentService paymentService;
+    private final IPaymentService mtnPaymentService;
+    private final IPaymentService shbPaymentService;
     private final IExchangeService exchangeService;
+    private final IWalletService walletService;
+    private final IPaymentService ipsPaymentService;
+    private final PayType defaultCashPayType = PayType.SHB;
 
-    public OrderServiceImpl(MallOrderMapper orderMapper, MallProductMapper productMapper, MallProductCategoryMapper productCategoryMapper, RestTemplate restTemplate, IPaymentService paymentService, IExchangeService exchangeService) {
+    public OrderServiceImpl(MallOrderMapper orderMapper,
+                            MallProductMapper productMapper,
+                            IExchangeService exchangeService,
+                            IWalletService walletService,
+                            @Qualifier("mtnPaymentService") IPaymentService mtnPaymentService,
+                            @Qualifier("shbPaymentService") IPaymentService shbPaymentService,
+                            @Qualifier("ipsPaymentService") IPaymentService ipsPaymentService) {
         this.orderMapper = orderMapper;
         this.productMapper = productMapper;
-        this.productCategoryMapper = productCategoryMapper;
-        this.paymentService = paymentService;
+        this.mtnPaymentService = mtnPaymentService;
+        this.shbPaymentService = shbPaymentService;
         this.exchangeService = exchangeService;
+        this.walletService = walletService;
+        this.ipsPaymentService = ipsPaymentService;
     }
 
-    private String getOrderNo(Long userId, Date date) {
-        Example example = new Example(MallOrder.class);
-        String dateStr = DateFormatUtils.format(date, "yyyy-MM-dd");
-        example.and().andBetween("createdAt", dateStr + " 00:00:00", dateStr + " 23:59:59").andEqualTo("userId", userId);
-        int count = orderMapper.selectCountByExample(example);
-        DecimalFormat df = new DecimalFormat("0000000");
-        DecimalFormat df2 = new DecimalFormat("0000");
-        return df.format(userId)
-                + DateFormatUtils.format(new Date(), "yyyyMMddHHmmss") + df2.format(count);
+    private String getOrderNo(Long userId) {
+        String pattern = "000000000";
+        DecimalFormat df = new DecimalFormat(pattern);
+        String userIdStr = df.format(userId).substring(pattern.length() < 4 ? 0 : pattern.length() - 4, pattern.length());
+        String timestamp = System.currentTimeMillis() + "";
+        timestamp = timestamp.substring(timestamp.length() < 8 ? 0 : timestamp.length() - 8, timestamp.length());
+        return DateFormatUtils.format(new Date(), "yyyyMMdd") + timestamp + userIdStr;
     }
 
     @Override
@@ -76,22 +88,24 @@ public class OrderServiceImpl implements IOrderService {
         if (product == null) {
             throw new RuntimeException("unknown_product_error");
         }
-        String orderId = getOrderNo(userId, new Date());
+        String orderId = getOrderNo(userId);
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order.setAmount(amount);
         order.setPrice(product.getPrice());
+        order.setTotalAmount(product.getPrice() * amount);
+        order.setFee(0d);
         order.setCategoryCode(product.getCategoryCode());
         order.setCurrency(product.getCurrency());
         order.setDiscount(product.getDiscount());
         order.setProductId(product.getProductId());
-        order.setName(product.getName());
+        order.setProductName(product.getName());
         order.setPayType(payType.getCode().byteValue());
         BigDecimal total = BigDecimal.valueOf(amount).multiply(BigDecimal.valueOf(product.getPrice()));
         if (product.getDiscount() != null) {
             total = total.multiply(BigDecimal.valueOf(product.getDiscount()));
         }
-        BigDecimal mtn = paymentService.getMtnValue(total, product.getCurrency());
+        BigDecimal mtn = walletService.getMtnValue(total, product.getCurrency());
         order.setMtnAmount(mtn.doubleValue());
         order.setType(product.getType());
         order.setUserId(userId);
@@ -103,7 +117,7 @@ public class OrderServiceImpl implements IOrderService {
         return orderId;
     }
 
-    private MallOrder paymentFinished(MallOrder order, PaymentResult paymentResult) {
+    private MallOrder updatePaymentStatus(MallOrder order, PaymentResult paymentResult) {
         PaymentStatus orderStatus = PaymentStatus.valueOf(order.getPayStatus());
         PaymentStatus status = paymentResult.getStatus();
         if (orderStatus == status) {
@@ -115,10 +129,12 @@ public class OrderServiceImpl implements IOrderService {
         if (orderStatus != PaymentStatus.UNPAID && status == PaymentStatus.IN_PAY) {
             throw new RuntimeException("order_payment_status_error");
         }
-        if ((orderStatus != PaymentStatus.IN_PAY && orderStatus != PaymentStatus.PAY_FAIL) && status == PaymentStatus.PAID) {
+        if ((orderStatus != PaymentStatus.IN_PAY && orderStatus != PaymentStatus.PAY_FAIL)
+                && status == PaymentStatus.PAID) {
             throw new RuntimeException("order_payment_status_error");
         }
-        if (orderStatus != PaymentStatus.IN_PAY && status == PaymentStatus.PAY_FAIL) {
+        if ((orderStatus != PaymentStatus.IN_PAY && orderStatus != PaymentStatus.UNPAID)
+                && status == PaymentStatus.PAY_FAIL) {
             throw new RuntimeException("order_payment_status_error");
         }
         if (orderStatus != PaymentStatus.PAID && status == PaymentStatus.REFUND) {
@@ -129,14 +145,14 @@ public class OrderServiceImpl implements IOrderService {
         }
         order.setPayStatus(status.getCode().byteValue());
         order.setPaymentOrderId(paymentResult.getPaymentOrderId());
-        order.setPayResult(StringUtils.defaultIfBlank(paymentResult.getResultCode(), "") + "_" + StringUtils.defaultIfBlank(paymentResult.getResultMessage(), ""));
+        order.setPayResult(paymentResult.getResultMessage());
         order.setCreatedAt(null);
         order.setUpdatedAt(null);
         orderMapper.updateByPrimaryKeySelective(order);
         return order;
     }
 
-    private MallOrder exchangeFinished(MallOrder order, ExchangeResult exchangeResult) {
+    private MallOrder updateExchangeStatus(MallOrder order, ExchangeResult exchangeResult) {
         ExchangeStatus orderExchangeStatus = ExchangeStatus.valueOf(order.getExchangeStatus());
         ExchangeStatus status = exchangeResult.getStatus();
         if (orderExchangeStatus == status) {
@@ -164,33 +180,70 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public MallOrder submit(String orderId) {
+    public JSONObject submit(String orderId, PayChannel channel) {
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
         if (order == null) {
             throw new RuntimeException("unknown_order_error");
         }
-        if (PayType.valueOf(order.getPayType()) == PayType.MTN) {
+        PaymentResult paymentResult = null;
+        JSONObject result = new JSONObject();
+        result.put("orderId", orderId);
+        if (PayType.valueOf(order.getPayType()) == PayType.MTN && channel == PayChannel.MOTION) {
+            try {
+                paymentResult = mtnPaymentService.toPay(orderId, PayChannel.MOTION);
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                paymentResult = new PaymentResult();
+                paymentResult.setOrderId(orderId);
+                paymentResult.setResultCode("500");
+                paymentResult.setResultMessage(e.getMessage());
+                paymentResult.setTime(new Date());
+                paymentResult.setUserId(order.getUserId());
+                paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+            }
             PaymentResult toPay = new PaymentResult();
             toPay.setOrderId(orderId);
-            toPay.setAmount(BigDecimal.valueOf(order.getMtnAmount()));
-            toPay.setCurrency(Currency.MTN);
             toPay.setResultCode("200");
             toPay.setResultMessage("success");
             toPay.setTime(new Date());
             toPay.setUserId(order.getUserId());
             toPay.setStatus(PaymentStatus.IN_PAY);
-            order = paymentFinished(order, toPay);
-            PaymentResult paymentResult = paymentService.mtnPay(order);
-            order = paymentFinished(order, paymentResult);
+            order = updatePaymentStatus(order, toPay);
+            order = updatePaymentStatus(order, paymentResult);
             order = toExchange(order);
-
         } else {
-            PaymentResult paymentResult = paymentService.cashPay(order, PayType.SHB);
-            order = paymentFinished(order, paymentResult);
+            try {
+                if (defaultCashPayType == PayType.SHB) {
+                    paymentResult = shbPaymentService.toPay(orderId, channel);
+                } else if (defaultCashPayType == PayType.IPS) {
+                    paymentResult = ipsPaymentService.toPay(orderId, channel);
+                } else {
+                    paymentResult = new PaymentResult();
+                    paymentResult.setOrderId(orderId);
+                    paymentResult.setResultCode("500");
+                    paymentResult.setResultMessage("unsupported_pay_type");
+                    paymentResult.setTime(new Date());
+                    paymentResult.setUserId(order.getUserId());
+                    paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+                }
+            } catch (Exception e) {
+                logger.error(e.getMessage(), e);
+                paymentResult = new PaymentResult();
+                paymentResult.setOrderId(orderId);
+                paymentResult.setResultMessage(e.getMessage());
+                paymentResult.setTime(new Date());
+                paymentResult.setUserId(order.getUserId());
+                paymentResult.setStatus(PaymentStatus.PAY_FAIL);
+            }
+            updatePaymentStatus(order, paymentResult);
+            result.put("data", paymentResult.getData());
         }
-        return order;
+        result.put("paymentStatus", paymentResult.getResultCode());
+        result.put("paymentMessage", paymentResult.getResultMessage());
+        result.put("status", order.getPayStatus());
+        return result;
     }
 
     private MallOrder toExchange(MallOrder order) {
@@ -203,9 +256,9 @@ public class OrderServiceImpl implements IOrderService {
             toExchange.setResultCode("200");
             toExchange.setResultMessage("success");
             toExchange.setOrderId(order.getOrderId());
-            order = exchangeFinished(order, toExchange);
+            order = updateExchangeStatus(order, toExchange);
             ExchangeResult exchangeResult = exchangeService.exchange(order.getOrderId());
-            order = exchangeFinished(order, exchangeResult);
+            order = updateExchangeStatus(order, exchangeResult);
         }
         return order;
     }
@@ -220,14 +273,14 @@ public class OrderServiceImpl implements IOrderService {
         }
         PaymentResult toPay = new PaymentResult();
         toPay.setOrderId(orderId);
-        toPay.setAmount(BigDecimal.valueOf(order.getMtnAmount()));
+        toPay.setTotalAmount(BigDecimal.valueOf(order.getMtnAmount()));
         toPay.setCurrency(Currency.valueOf(order.getCurrency()));
         toPay.setResultCode("200");
         toPay.setResultMessage("refunded");
         toPay.setTime(new Date());
         toPay.setUserId(order.getUserId());
         toPay.setStatus(PaymentStatus.REFUND);
-        order = paymentFinished(order, toPay);
+        order = updatePaymentStatus(order, toPay);
         return order;
     }
 
@@ -241,14 +294,14 @@ public class OrderServiceImpl implements IOrderService {
         }
         PaymentResult toPay = new PaymentResult();
         toPay.setOrderId(orderId);
-        toPay.setAmount(BigDecimal.valueOf(order.getMtnAmount()));
+        toPay.setTotalAmount(BigDecimal.valueOf(order.getMtnAmount()));
         toPay.setCurrency(Currency.valueOf(order.getCurrency()));
         toPay.setResultCode("200");
         toPay.setResultMessage("canceled");
         toPay.setTime(new Date());
         toPay.setUserId(order.getUserId());
         toPay.setStatus(PaymentStatus.CANCELED);
-        order = paymentFinished(order, toPay);
+        order = updatePaymentStatus(order, toPay);
         return order;
     }
 
@@ -257,7 +310,16 @@ public class OrderServiceImpl implements IOrderService {
         if (data == null) {
             throw new RuntimeException("unknown_data_error");
         }
-        PaymentResult paymentResult = paymentService.processPaymentNotify(data, payType);
+        PaymentResult paymentResult = null;
+        if (payType == PayType.SHB) {
+            paymentResult = shbPaymentService.processPaymentNotify(data);
+        }
+        if (payType == PayType.IPS) {
+            paymentResult = ipsPaymentService.processPaymentNotify(data);
+        }
+        if (paymentResult == null) {
+            throw new RuntimeException("payment_notify_process_error");
+        }
         String orderId = paymentResult.getOrderId();
         if (StringUtils.isBlank(orderId)) {
             throw new RuntimeException("unknown_orderId_error");
@@ -268,7 +330,7 @@ public class OrderServiceImpl implements IOrderService {
         if (order == null) {
             throw new RuntimeException("unknown_order_error");
         }
-        order = paymentFinished(order, paymentResult);
+        order = updatePaymentStatus(order, paymentResult);
         order = toExchange(order);
         return order;
     }
@@ -289,7 +351,7 @@ public class OrderServiceImpl implements IOrderService {
         if (order == null) {
             throw new RuntimeException("unknown_order_error");
         }
-        order = exchangeFinished(order, exchangeResult);
+        order = updateExchangeStatus(order, exchangeResult);
         return order;
     }
 
@@ -297,8 +359,30 @@ public class OrderServiceImpl implements IOrderService {
     public PageInfo<MallOrder> selectPage(MallOrder order,Integer offset, Integer limit) {
         int pageNum = offset / limit + 1;
         PageHelper.startPage(pageNum,limit);
+
+        Weekend weekend = Weekend.of(MallOrder.class);
+        WeekendCriteria<MallOrder, Object> where = weekend.weekendCriteria();
+        if (!org.springframework.util.StringUtils.isEmpty(order.getKeywords())){
+            where.andLike(MallOrder :: getProductName, "%" + order.getKeywords() + "%");
+            where.orLike(MallOrder :: getCategoryCode, "%" + order.getKeywords() + "%");
+            where.orLike(MallOrder :: getRemark, "%" + order.getKeywords() + "%");
+        }
+
         Example ex = new Example(MallOrder.class);
-        List<MallOrder> list = orderMapper.select(order);
+        ex.and(where);
+        if (order.getPayStatus() != null){
+            ex.and().andEqualTo("payStatus",order.getPayStatus());
+        }
+        if (order.getExchangeStatus() != null){
+            ex.and().andEqualTo("exchangeStatus",order.getExchangeStatus());
+        }
+        if (order.getUserId() != null){
+            ex.and().andEqualTo("userId",order.getUserId());
+        }
+        if (!StringUtils.isEmpty(order.getProductId())){
+            ex.and().andEqualTo("productId",order.getProductId());
+        }
+        List<MallOrder> list = orderMapper.selectByExample(ex);
         return new PageInfo<>(list);
     }
 }

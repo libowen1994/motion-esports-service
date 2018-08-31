@@ -23,7 +23,7 @@ public class MallProductCategoryController {
     private IProductCategoryService categoryService;
 
     @GetMapping()
-    public ResponseEntity<PageInfo> productCategory(Integer offset, Integer limit){
+    public ResponseEntity<PageInfo> productCategory(String keywords,Integer status,Integer offset, Integer limit){
         logger.info("offset -> {}, limit -> {}",offset,limit);
         if (offset == null){
             offset = 0;
@@ -31,7 +31,7 @@ public class MallProductCategoryController {
         if (limit == null){
             limit = 1000;
         }
-        PageInfo<MallProductCategory> categorys = categoryService.getAllCategorys(offset, limit);
+        PageInfo<MallProductCategory> categorys = categoryService.getAllCategorys(keywords,status,offset, limit);
         return new ResponseEntity<>(categorys, HttpStatus.OK);
     }
 

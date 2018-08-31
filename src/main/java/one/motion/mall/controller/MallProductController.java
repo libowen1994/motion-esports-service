@@ -22,14 +22,16 @@ public class MallProductController {
     private IProductService productService;
 
     @RequestMapping()
-    public ResponseEntity<PageInfo> getList(Integer offset, Integer limit) {
+    public ResponseEntity<PageInfo> getList(Integer status,String keywords,Integer offset, Integer limit) {
+        logger.info("query MallProduct status -> {} , keywords -> {}",status,keywords);
+
         if (offset == null) {
             offset = 0;
         }
         if (limit == null || limit <= 0) {
             limit = 20;
         }
-        PageInfo<MallProduct> data = productService.selectPage(offset, limit);
+        PageInfo<MallProduct> data = productService.selectPage(status,keywords,offset, limit);
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
 
