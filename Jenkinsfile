@@ -64,12 +64,26 @@ pipeline {
                 }
             }
         }
-        //stage('Deploy') {
-        //    when { branch 'master' }
-        //    steps {
-        //        build job: 'Devops/motion-deployer', parameters: [string(name: 'artifactId', value: artifactId), string(name: 'build', value: buildTag)], wait: false
-        //    }
-        //}
+
+        stage('Deploy_master') {
+            when { branch 'master' }
+            steps {
+                script {
+                    def buildTag=sh(script:'cat .build', returnStdout: true).trim()
+                    build job: 'Devops/motion-deployer', parameters: [string(name: 'artifactId', value: "${env.ARTIFACTID}"), string(name: 'build', value: buildTag)], wait: false
+                }
+            }
+        }
+        
+        stage('Deploy_develop') {
+            when { branch 'develop' }
+            steps {
+                script {
+                    def buildTag=sh(script:'cat .build', returnStdout: true).trim()
+                    build job: 'Devops/motion-dev-deployer', parameters: [string(name: 'artifactId', value: "${env.ARTIFACTID}"), string(name: 'build', value: buildTag)], wait: false
+                }
+            }
+        }
     }
 
     post {
