@@ -111,16 +111,18 @@ docker-compose logs -f maindb
 
 
 # 組態設定
-
+### health endpoint
+```http://mall-service:9090/actuator/health```
 ### 环境变量
 name           | description
 ---            | ---
 SPRING_PROFILES_ACTIVE| 生产环境: prod, 测试环境: test
 MOTION_WALLET_SERVICE_ADDR | motion-wallet-service 地址，不用http 
+KAFKA_HOSTS | kafka brokers 多个broker用,分开
 REDIS_HOST     | redis主机
 REDIS_PASSWORD | redis密码
-MYSQL_HOST     | mysql主机
-DB_NAME        | db名称
-DB_USER        | db账号
-DB_PASSWORD    | db账号密码
+MYSQL_HOST     | user-portal mysql主机
+DB_NAME        | user-portal db名称
+DB_USER        | user-portal db账号
+DB_PASSWORD    | user-portal db账号密码
 

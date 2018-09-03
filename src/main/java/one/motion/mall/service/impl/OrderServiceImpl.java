@@ -1,6 +1,7 @@
 package one.motion.mall.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import one.motion.mall.config.KafkaConfig;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import one.motion.mall.dto.*;
@@ -14,10 +15,12 @@ import one.motion.mall.service.IPaymentService;
 import one.motion.mall.service.IWalletService;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.lang3.time.DateFormatUtils;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 import tk.mybatis.mapper.weekend.Weekend;
@@ -26,6 +29,7 @@ import tk.mybatis.mapper.weekend.WeekendCriteria;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Date;
+import java.util.Optional;
 import java.util.List;
 import java.util.UUID;
 
@@ -69,7 +73,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public String checkout(Long userId, String productId, Integer amount, PayType payType) {
+    public String checkout(Long userId, String ipAddress, String attach, String productId, Integer amount, PayType payType) {
         if (userId == null) {
             throw new RuntimeException("unknown_userId_error");
         }
@@ -101,6 +105,8 @@ public class OrderServiceImpl implements IOrderService {
         order.setProductId(product.getProductId());
         order.setProductName(product.getName());
         order.setPayType(payType.getCode().byteValue());
+        order.setAttach(attach);
+        order.setIpAddress(ipAddress);
         BigDecimal total = BigDecimal.valueOf(amount).multiply(BigDecimal.valueOf(product.getPrice()));
         if (product.getDiscount() != null) {
             total = total.multiply(BigDecimal.valueOf(product.getDiscount()));
@@ -126,7 +132,8 @@ public class OrderServiceImpl implements IOrderService {
         if (orderStatus == null) {
             throw new RuntimeException("unknown_order_status_error");
         }
-        if (orderStatus != PaymentStatus.UNPAID && status == PaymentStatus.IN_PAY) {
+        if ((orderStatus != PaymentStatus.UNPAID && orderStatus != PaymentStatus.IN_PAY)
+                && status == PaymentStatus.IN_PAY) {
             throw new RuntimeException("order_payment_status_error");
         }
         if ((orderStatus != PaymentStatus.IN_PAY && orderStatus != PaymentStatus.PAY_FAIL)
@@ -146,6 +153,7 @@ public class OrderServiceImpl implements IOrderService {
         order.setPayStatus(status.getCode().byteValue());
         order.setPaymentOrderId(paymentResult.getPaymentOrderId());
         order.setPayResult(paymentResult.getResultMessage());
+        order.setPayResultCode(paymentResult.getResultCode());
         order.setCreatedAt(null);
         order.setUpdatedAt(null);
         orderMapper.updateByPrimaryKeySelective(order);
@@ -161,7 +169,8 @@ public class OrderServiceImpl implements IOrderService {
         if (orderExchangeStatus == null) {
             throw new RuntimeException("unknown_order_exchange_status_error");
         }
-        if (orderExchangeStatus != ExchangeStatus.NOT_EXCHANGED && status == ExchangeStatus.EXCHANGING) {
+        if ((orderExchangeStatus != ExchangeStatus.NOT_EXCHANGED && orderExchangeStatus != ExchangeStatus.EXCHANGING)
+                && status == ExchangeStatus.EXCHANGING) {
             throw new RuntimeException("order_exchange_status_error");
         }
         if (orderExchangeStatus != ExchangeStatus.EXCHANGING && status == ExchangeStatus.EXCHANGE_FAIL) {
@@ -172,7 +181,8 @@ public class OrderServiceImpl implements IOrderService {
         }
         order.setExchangeStatus(status.getCode().byteValue());
         order.setExchangeOrderId(exchangeResult.getExchangeOrderId());
-        order.setExchangeResult(StringUtils.defaultIfBlank(exchangeResult.getResultCode(), "") + "_" + StringUtils.defaultIfBlank(exchangeResult.getResultMessage(), ""));
+        order.setExchangeResult(exchangeResult.getResultMessage());
+        order.setExchangeResultCode(exchangeResult.getResultCode());
         order.setCreatedAt(null);
         order.setUpdatedAt(null);
         orderMapper.updateByPrimaryKeySelective(order);
@@ -180,7 +190,7 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public JSONObject submit(String orderId, PayChannel channel) {
+    public JSONObject submit(String orderId, boolean isMobile, PayChannel channel) {
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
@@ -192,7 +202,7 @@ public class OrderServiceImpl implements IOrderService {
         result.put("orderId", orderId);
         if (PayType.valueOf(order.getPayType()) == PayType.MTN && channel == PayChannel.MOTION) {
             try {
-                paymentResult = mtnPaymentService.toPay(orderId, PayChannel.MOTION);
+                paymentResult = mtnPaymentService.toPay(orderId, isMobile, PayChannel.MOTION);
             } catch (Exception e) {
                 logger.error(e.getMessage(), e);
                 paymentResult = new PaymentResult();
@@ -216,9 +226,9 @@ public class OrderServiceImpl implements IOrderService {
         } else {
             try {
                 if (defaultCashPayType == PayType.SHB) {
-                    paymentResult = shbPaymentService.toPay(orderId, channel);
+                    paymentResult = shbPaymentService.toPay(orderId, isMobile, channel);
                 } else if (defaultCashPayType == PayType.IPS) {
-                    paymentResult = ipsPaymentService.toPay(orderId, channel);
+                    paymentResult = ipsPaymentService.toPay(orderId, isMobile, channel);
                 } else {
                     paymentResult = new PaymentResult();
                     paymentResult.setOrderId(orderId);
@@ -336,12 +346,11 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public MallOrder exchangeNotify(String data) {
-        if (data == null) {
+    public MallOrder exchangeNotify(ExchangeResult result) {
+        if (result == null) {
             throw new RuntimeException("unknown_data_error");
         }
-        ExchangeResult exchangeResult = exchangeService.processExchangeNotify(data);
-        String orderId = exchangeResult.getOrderId();
+        String orderId = result.getOrderId();
         if (StringUtils.isBlank(orderId)) {
             throw new RuntimeException("unknown_orderId_error");
         }
@@ -351,8 +360,23 @@ public class OrderServiceImpl implements IOrderService {
         if (order == null) {
             throw new RuntimeException("unknown_order_error");
         }
-        order = updateExchangeStatus(order, exchangeResult);
+        order = updateExchangeStatus(order, result);
         return order;
+    }
+
+    @KafkaListener(topics = KafkaConfig.MALL_EXCHANGE_TOPIC)
+    public void processExchangeNotify(ConsumerRecord<?, String> cr) {
+        Optional<String> kafkaMessage = Optional.ofNullable(cr.value());
+        if (kafkaMessage.isPresent()) {
+            String message = kafkaMessage.get();
+            logger.info("record =" + cr);
+            logger.info("message =" + message);
+            JSONObject jsonObject = JSONObject.parseObject(message);
+            if (jsonObject.containsKey("type") && "event".equals(jsonObject.getString("type"))) {
+                ExchangeResult exchangeResult = jsonObject.toJavaObject(ExchangeResult.class);
+                this.exchangeNotify(exchangeResult);
+            }
+        }
     }
 
     @Override

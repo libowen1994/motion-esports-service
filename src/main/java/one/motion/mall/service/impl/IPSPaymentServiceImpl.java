@@ -63,7 +63,7 @@ public class IPSPaymentServiceImpl implements IPaymentService {
     private String walletAddress;
 
     @Override
-    public PaymentResult toPay(String orderId, PayChannel channel) {
+    public PaymentResult toPay(String orderId, boolean isMobile, PayChannel channel) {
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);

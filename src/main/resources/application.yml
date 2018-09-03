@@ -48,6 +48,21 @@ spring:
         max-wait: 500ms
         max-active: 8
         min-idle: 1
+  kafka:
+    bootstrap-servers: ${KAFKA_HOSTS:127.0.0.1:9092}
+    producer:
+      retries: 0
+      buffer-memory: 33554432
+      batch-size: 16384
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+    consumer:
+      group-id: motion-mall-service
+      auto-offset-reset: earliest
+      enable-auto-commit: true
+      auto-commit-interval: 100
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
   datasource:
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:3306/${DB_NAME:motion_mega_db}?useSSL=false&useUnicode=true&zeroDateTimeBehavior=convertToNull&characterEncoding=utf-8

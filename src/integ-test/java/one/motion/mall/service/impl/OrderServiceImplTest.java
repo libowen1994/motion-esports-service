@@ -7,9 +7,11 @@ import one.motion.mall.mapper.MallProductMapper;
 import one.motion.mall.model.MallOrder;
 import one.motion.mall.model.MallProduct;
 import one.motion.mall.service.IOrderService;
+import one.motion.mall.service.IPaymentService;
 import one.motion.mall.service.IWalletService;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.boot.test.mock.mockito.MockitoTestExecutionListener;
@@ -66,7 +68,7 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
     @Test
     public void testMtnBuySuccess() {
         when(mockWalletService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
-        String orderId = orderService.checkout(380L, "12345", 1, PayType.MTN);
+        String orderId = orderService.checkout(380L, "127.0.0.1", "", "12345", 1, PayType.MTN);
         Assert.assertNotNull(orderId);
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
@@ -79,19 +81,19 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         json.put("code", 200);
         json.put("message", "success");
         when(mockWalletService.expendMTN(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(json);
-        JSONObject result = orderService.submit(orderId, PayChannel.MOTION);
+        JSONObject result = orderService.submit(orderId, false, PayChannel.MOTION);
         order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
         Assert.assertNotNull(order);
         Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.PAID.getCode().byteValue());
-        Assert.assertEquals(order.getExchangeStatus(), (Byte) ExchangeStatus.EXCHANGED.getCode().byteValue());
+        Assert.assertEquals(order.getExchangeStatus(), (Byte) ExchangeStatus.EXCHANGING.getCode().byteValue());
     }
 
     @Test
     public void testMtnBuyFail() {
         when(mockWalletService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
-        String orderId = orderService.checkout(380L, "12345", 1, PayType.MTN);
+        String orderId = orderService.checkout(380L, "127.0.0.1", "1", "12345", 1, PayType.MTN);
         Assert.assertNotNull(orderId);
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
@@ -103,12 +105,35 @@ public class OrderServiceImplTest extends AbstractTransactionalTestNGSpringConte
         json.put("code", 400);
         json.put("message", "fail");
         when(mockWalletService.expendMTN(Mockito.any(), Mockito.any(), Mockito.any())).thenReturn(json);
-        JSONObject result = orderService.submit(orderId, PayChannel.MOTION);
+        JSONObject result = orderService.submit(orderId, false, PayChannel.MOTION);
         order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
         Assert.assertNotNull(order);
         Assert.assertEquals(order.getPayStatus(), (Byte) PaymentStatus.PAY_FAIL.getCode().byteValue());
         Assert.assertEquals(order.getExchangeStatus(), (Byte) ExchangeStatus.NOT_EXCHANGED.getCode().byteValue());
+    }
+
+    @Autowired
+    @Qualifier("shbPaymentService")
+    private IPaymentService shbPaymentService;
+
+    @Test
+    public void testToPay() {
+        when(mockWalletService.getMtnValue(Mockito.any(), Mockito.anyString())).thenReturn(BigDecimal.valueOf(12.34));
+        String orderId = orderService.checkout(380L, "127.0.0.1", "", "12345", 1, PayType.MTN);
+        Assert.assertNotNull(orderId);
+        MallOrder order = new MallOrder();
+        order.setOrderId(orderId);
+        order = orderMapper.selectOne(order);
+        Assert.assertNotNull(order);
+        Assert.assertEquals(order.getUserId(), Long.valueOf(380L));
+        Assert.assertEquals(order.getMtnAmount(), 12.34);
+        Assert.assertEquals(order.getTotalAmount(), 9d);
+        JSONObject json = orderService.submit(orderId, false, PayChannel.WECHAT);
+        logger.info(json);
+        Assert.assertNotNull(json);
+        PaymentResult paymentResult = shbPaymentService.queryPaymentStatus(orderId);
+        Assert.assertNotNull(paymentResult);
     }
 }

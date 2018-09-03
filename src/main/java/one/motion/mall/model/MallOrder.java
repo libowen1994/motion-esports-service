@@ -101,7 +101,7 @@ public class MallOrder {
     private Double mtnAmount;
 
     /**
-     * 付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * 付款方式(1mtn付款, 2：IPS, 3：SHB)
      */
     @Column(name = "pay_type")
     private Byte payType;
@@ -119,6 +119,12 @@ public class MallOrder {
     private Byte payStatus;
 
     /**
+     * 支付结果代码
+     */
+    @Column(name = "pay_result_code")
+    private String payResultCode;
+
+    /**
      * 兑换订单号
      */
     @Column(name = "exchange_order_id")
@@ -129,6 +135,22 @@ public class MallOrder {
      */
     @Column(name = "exchange_status")
     private Byte exchangeStatus;
+
+    /**
+     * 兑换结果代码
+     */
+    @Column(name = "exchange_result_code")
+    private String exchangeResultCode;
+
+    /**
+     * 备注
+     */
+    private String remark;
+
+    /**
+     * 附加字段
+     */
+    private String attach;
 
     @Column(name = "created_at")
     private Date createdAt;
@@ -443,18 +465,18 @@ public class MallOrder {
     }
 
     /**
-     * 获取付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * 获取付款方式(1mtn付款, 2：IPS, 3：SHB)
      *
-     * @return pay_type - 付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * @return pay_type - 付款方式(1mtn付款, 2：IPS, 3：SHB)
      */
     public Byte getPayType() {
         return payType;
     }
 
     /**
-     * 设置付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * 设置付款方式(1mtn付款, 2：IPS, 3：SHB)
      *
-     * @param payType 付款方式(1mtn付款, 2：ScanPay, 3：SHB)
+     * @param payType 付款方式(1mtn付款, 2：IPS, 3：SHB)
      */
     public void setPayType(Byte payType) {
         this.payType = payType;
@@ -497,6 +519,24 @@ public class MallOrder {
     }
 
     /**
+     * 获取支付结果代码
+     *
+     * @return pay_result_code - 支付结果代码
+     */
+    public String getPayResultCode() {
+        return payResultCode;
+    }
+
+    /**
+     * 设置支付结果代码
+     *
+     * @param payResultCode 支付结果代码
+     */
+    public void setPayResultCode(String payResultCode) {
+        this.payResultCode = payResultCode == null ? null : payResultCode.trim();
+    }
+
+    /**
      * 获取兑换订单号
      *
      * @return exchange_order_id - 兑换订单号
@@ -530,6 +570,60 @@ public class MallOrder {
      */
     public void setExchangeStatus(Byte exchangeStatus) {
         this.exchangeStatus = exchangeStatus;
+    }
+
+    /**
+     * 获取兑换结果代码
+     *
+     * @return exchange_result_code - 兑换结果代码
+     */
+    public String getExchangeResultCode() {
+        return exchangeResultCode;
+    }
+
+    /**
+     * 设置兑换结果代码
+     *
+     * @param exchangeResultCode 兑换结果代码
+     */
+    public void setExchangeResultCode(String exchangeResultCode) {
+        this.exchangeResultCode = exchangeResultCode == null ? null : exchangeResultCode.trim();
+    }
+
+    /**
+     * 获取备注
+     *
+     * @return remark - 备注
+     */
+    public String getRemark() {
+        return remark;
+    }
+
+    /**
+     * 设置备注
+     *
+     * @param remark 备注
+     */
+    public void setRemark(String remark) {
+        this.remark = remark == null ? null : remark.trim();
+    }
+
+    /**
+     * 获取附加字段
+     *
+     * @return attach - 附加字段
+     */
+    public String getAttach() {
+        return attach;
+    }
+
+    /**
+     * 设置附加字段
+     *
+     * @param attach 附加字段
+     */
+    public void setAttach(String attach) {
+        this.attach = attach == null ? null : attach.trim();
     }
 
     /**

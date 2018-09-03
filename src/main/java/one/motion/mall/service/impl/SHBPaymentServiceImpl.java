@@ -34,7 +34,8 @@ public class SHBPaymentServiceImpl implements IPaymentService {
 
     @Value("${SHB_MERCHANT_NUMBER}")
     private String SHB_MERCHANT_NUMBER;
-
+    @Value("${SHB_CHANNEL_NUMBER}")
+    private String SHB_CHANNEL_NUMBER;
     @Value("${SHB_PAYMENT_BASE_URL}")
     private String SHB_PAYMENT_BASE_URL;
     @GrpcClient("wallet-service")
@@ -42,7 +43,9 @@ public class SHBPaymentServiceImpl implements IPaymentService {
     @Value("${MOTION_WALLET_SERVICE_ADDR:}")
     private String walletAddress;
     @Value("${PAYMENT_DOMAIN}")
-    private String paymentGatewayDomain;
+    private String PAYMENT_DOMAIN;
+    @Value("${PAYMENT_CALLBACK_DOMAIN}")
+    private String PAYMENT_CALLBACK_DOMAIN;
     @Value("${SHB_RSA_PUB_KEY}")
     private String shbPublicKeyString;
     @Value("${MTN_RSA_PRI_KEY}")
@@ -56,7 +59,7 @@ public class SHBPaymentServiceImpl implements IPaymentService {
     }
 
     @Override
-    public PaymentResult toPay(String orderId, PayChannel channel) {
+    public PaymentResult toPay(String orderId, boolean isMobile, PayChannel channel) {
         MallOrder order = new MallOrder();
         order.setOrderId(orderId);
         order = orderMapper.selectOne(order);
@@ -67,18 +70,28 @@ public class SHBPaymentServiceImpl implements IPaymentService {
             throw new RuntimeException("order_status_error");
         }
         String payType = "";
-        if (channel == PayChannel.ALIPAY) {
-            payType = "ALI_NATIVE";
-        }
-        if (channel == PayChannel.WECHAT) {
-            payType = "WECHAT_NATIVE";
+        if (isMobile) {
+            if (channel == PayChannel.ALIPAY) {
+                payType = "ALI_JSAPI";
+            }
+            if (channel == PayChannel.WECHAT) {
+                payType = "WECHAT_JSAPI";
+            }
+        } else {
+            if (channel == PayChannel.ALIPAY) {
+                payType = "ALI_NATIVE";
+            }
+            if (channel == PayChannel.WECHAT) {
+                payType = "WECHAT_NATIVE";
+            }
         }
         JSONObject businessHead = buildBusinessHead();
 
-//        JSONObject businessContext = buildBusinessContextFormPay(orderId, payType, BigDecimal.valueOf(order.getTotalAmount()),
-//                order.getProductName(), order.getProductId(), order.getCategoryCode(), order.getIpAddress(),
-//                order.getUserId());
-        JSONObject businessContext = buildBusinessContextFormPay();
+        JSONObject businessContext = buildBusinessContextFormPay(orderId, payType, BigDecimal.valueOf(order.getTotalAmount()),
+                order.getProductName(), order.getProductId(), order.getCategoryCode(), order.getIpAddress(),
+                order.getUserId());
+        logger.info("head: {}", businessHead);
+        logger.info("body: {}", businessContext);
         String context = null;
         try {
             context = RSAUtils.verifyAndEncryptionToString(businessContext, businessHead, privateKeyString, shbPublicKeyString);
@@ -254,19 +267,19 @@ public class SHBPaymentServiceImpl implements IPaymentService {
         JSONObject businessContext = new JSONObject();
         businessContext.put("defrayalType", shbPayType);//支付方式(必填)
         businessContext.put("subMerchantNumber", SHB_MERCHANT_NUMBER);//商户号(必填)
-        businessContext.put("channelMapped", "HB_CIB_ONLINE");//支付通道标识(必填)
-        businessContext.put("merchantOrderNumber", System.currentTimeMillis());//商户订单号(必填),每次交易唯一
+        businessContext.put("channelMapped", SHB_CHANNEL_NUMBER);//支付通道标识(必填)
+        businessContext.put("merchantOrderNumber", orderId);//商户订单号(必填),每次交易唯一
         businessContext.put("tradeCheckCycle", "T1");//结算周期(必填)
         businessContext.put("orderTime", new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));//订单时间(必填)
         businessContext.put("currenciesType", "CNY");//币种：人民币(必填)
-        businessContext.put("tradeAmount", amount.multiply(BigDecimal.valueOf(100)));//交易金额分(必填)
+        businessContext.put("tradeAmount", amount.multiply(BigDecimal.valueOf(100)).intValue());//交易金额分(必填)
 
         businessContext.put("commodityBody", productInfo);//商品信息(必填)
         businessContext.put("commodityDetail", productDetail);//商品详情(必填)
         businessContext.put("commodityRemark", remark);//商品备注
 
-        businessContext.put("returnUrl", paymentGatewayDomain + "/mall/payment/" + orderId);//同步通知
-        businessContext.put("notifyUrl", "https://" + paymentGatewayDomain + "/api/v1/mall/payment/notify/shb");//异步通知(必填)
+        businessContext.put("returnUrl", PAYMENT_DOMAIN + "/mall/payment/" + orderId);//同步通知
+        businessContext.put("notifyUrl", PAYMENT_CALLBACK_DOMAIN + "/api/v1/mall/payment/notify/shb");//异步通知(必填)
 
         businessContext.put("terminalId", ip + userId);//设备ID
         businessContext.put("terminalIP", ip);//设备IP(必填)
@@ -295,37 +308,5 @@ public class SHBPaymentServiceImpl implements IPaymentService {
             logger.error(e.getMessage(), e);
             return false;
         }
-    }
-
-    /**
-     * 支付请求内容
-     *
-     * @return
-     */
-    public JSONObject buildBusinessContextFormPay() {
-        JSONObject businessContext = new JSONObject();
-        businessContext.put("defrayalType", "ALI_H5");//支付方式(必填)
-        businessContext.put("subMerchantNumber", SHB_MERCHANT_NUMBER);//商户号(必填)
-        businessContext.put("channelMapped", "HB_CIB_ONLINE");//支付通道标识(必填)
-        businessContext.put("merchantOrderNumber", System.currentTimeMillis());//商户订单号(必填),每次交易唯一
-        businessContext.put("tradeCheckCycle", "T1");//结算周期(必填)
-        businessContext.put("orderTime", new SimpleDateFormat("yyyyMMddHHmmss").format(new Date()));//订单时间(必填)
-        businessContext.put("currenciesType", "CNY");//币种：人民币(必填)
-        businessContext.put("tradeAmount", "1");//交易金额分(必填)
-
-        businessContext.put("commodityBody", "商品信息");//商品信息(必填)
-        businessContext.put("commodityDetail", "商品详情");//商品详情(必填)
-        businessContext.put("commodityRemark", "商品备注");//商品备注
-
-        businessContext.put("returnUrl", "http://www.baidu.com");//同步通知
-        businessContext.put("notifyUrl", "http://39.108.134.13:10015/api/notify/shb");//异步通知(必填)
-
-        businessContext.put("terminalId", "设备ID");//设备ID
-        businessContext.put("terminalIP", "8.8.8.8");//设备IP(必填)
-        businessContext.put("userId", "123");//用户标示,ALI_SCAN/WECHAT_SCAN必填
-
-        businessContext.put("remark", "备注");//备注
-        businessContext.put("attach", "");//附加信息
-        return businessContext;
     }
 }

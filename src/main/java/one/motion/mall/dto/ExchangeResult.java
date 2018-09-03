@@ -9,6 +9,18 @@ public class ExchangeResult {
     private Date time;
     private String resultCode;
     private String resultMessage;
+    private String attach;
+    private ProductType productType;
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    private String type = "event";
 
     public String getOrderId() {
         return orderId;
@@ -56,5 +68,21 @@ public class ExchangeResult {
 
     public void setExchangeOrderId(String exchangeOrderId) {
         this.exchangeOrderId = exchangeOrderId;
+    }
+
+    public String getAttach() {
+        return attach;
+    }
+
+    public void setAttach(String attach) {
+        this.attach = attach;
+    }
+
+    public ProductType getProductType() {
+        return productType;
+    }
+
+    public void setProductType(ProductType productType) {
+        this.productType = productType;
     }
 }

@@ -7,7 +7,6 @@ import tk.mybatis.spring.annotation.MapperScan;
 @SpringBootApplication
 @MapperScan(basePackages = "one.motion.mall.mapper")
 public class MotionApplication {
-
     public static void main(String[] args) {
         SpringApplication.run(MotionApplication.class, args);
     }

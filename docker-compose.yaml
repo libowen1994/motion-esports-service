@@ -16,6 +16,7 @@ services:
     - DB_USER=www
     - DB_PASSWORD=wwwpwd
     - REDIS_HOST=redis
+    - KAFKA_HOSTS=kafka:9092
     - SERVER_PORT=8080
     volumes:
     - .:/home/gradle/project
@@ -36,3 +37,8 @@ services:
 
   redis:
     image: redis:3-alpine
+
+  kafka:
+    image: spotify/kafka:latest
+    environment:
+      - "ADVERTISED_PORT=9092"
