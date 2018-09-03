@@ -13,10 +13,8 @@ import com.alibaba.fastjson.JSONObject;
 import one.motion.mall.dto.NewOrderCommand;
 import one.motion.mall.dto.PayType;
 import one.motion.mall.dto.ToPayCommand;
-import one.motion.mall.service.IOrderService;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;

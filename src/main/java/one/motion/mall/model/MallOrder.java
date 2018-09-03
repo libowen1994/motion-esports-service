@@ -60,9 +60,6 @@ public class MallOrder {
     @Column(name = "product_id")
     private String productId;
 
-    @Column(name = "remark")
-    private String remark;
-
     /**
      * 商品数量
      */
@@ -146,11 +143,6 @@ public class MallOrder {
      * 备注
      */
     private String remark;
-
-    /**
-     * 附加字段
-     */
-    private String attach;
 
     @Column(name = "created_at")
     private Date createdAt;
@@ -698,19 +690,4 @@ public class MallOrder {
         this.keywords = keywords;
     }
 
-    public String getRemark() {
-        return remark;
-    }
-
-    public void setRemark(String remark) {
-        this.remark = remark;
-    }
-
-    public String getAttach() {
-        return attach;
-    }
-
-    public void setAttach(String attach) {
-        this.attach = attach;
-    }
 }
