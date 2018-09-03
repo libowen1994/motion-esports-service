@@ -1,6 +1,5 @@
 package one.motion.mall.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import one.motion.mall.config.KafkaConfig;
 import one.motion.mall.dto.*;
@@ -125,7 +124,8 @@ public class OrderServiceImpl implements IOrderService {
         if (orderStatus == null) {
             throw new RuntimeException("unknown_order_status_error");
         }
-        if (orderStatus != PaymentStatus.UNPAID && status == PaymentStatus.IN_PAY) {
+        if ((orderStatus != PaymentStatus.UNPAID && orderStatus != PaymentStatus.IN_PAY)
+                && status == PaymentStatus.IN_PAY) {
             throw new RuntimeException("order_payment_status_error");
         }
         if ((orderStatus != PaymentStatus.IN_PAY && orderStatus != PaymentStatus.PAY_FAIL)
@@ -161,7 +161,8 @@ public class OrderServiceImpl implements IOrderService {
         if (orderExchangeStatus == null) {
             throw new RuntimeException("unknown_order_exchange_status_error");
         }
-        if (orderExchangeStatus != ExchangeStatus.NOT_EXCHANGED && status == ExchangeStatus.EXCHANGING) {
+        if ((orderExchangeStatus != ExchangeStatus.NOT_EXCHANGED && orderExchangeStatus != ExchangeStatus.EXCHANGING)
+                && status == ExchangeStatus.EXCHANGING) {
             throw new RuntimeException("order_exchange_status_error");
         }
         if (orderExchangeStatus != ExchangeStatus.EXCHANGING && status == ExchangeStatus.EXCHANGE_FAIL) {
@@ -355,15 +356,18 @@ public class OrderServiceImpl implements IOrderService {
         return order;
     }
 
-    @KafkaListener(topics = KafkaConfig.MALL_EXCHANGE_NOTIFY_TOPIC)
+    @KafkaListener(topics = KafkaConfig.MALL_EXCHANGE_TOPIC)
     public void processExchangeNotify(ConsumerRecord<?, String> cr) {
         Optional<String> kafkaMessage = Optional.ofNullable(cr.value());
         if (kafkaMessage.isPresent()) {
             String message = kafkaMessage.get();
             logger.info("record =" + cr);
             logger.info("message =" + message);
-            ExchangeResult exchangeResult = JSON.parseObject(message, ExchangeResult.class);
-            this.exchangeNotify(exchangeResult);
+            JSONObject jsonObject = JSONObject.parseObject(message);
+            if (jsonObject.containsKey("type") && "event".equals(jsonObject.getString("type"))) {
+                ExchangeResult exchangeResult = jsonObject.toJavaObject(ExchangeResult.class);
+                this.exchangeNotify(exchangeResult);
+            }
         }
     }
 }

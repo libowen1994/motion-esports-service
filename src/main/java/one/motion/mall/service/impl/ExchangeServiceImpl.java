@@ -45,6 +45,7 @@ public class ExchangeServiceImpl implements IExchangeService {
         command.setRemark(order.getRemark());
         command.setUserId(order.getUserId());
         command.setProductType(ProductType.valueOf(order.getType()));
+        command.setIpAddress(order.getIpAddress());
         ExchangeResult exchangeResult = new ExchangeResult();
         try {
             kafkaTemplate.send(KafkaConfig.MALL_EXCHANGE_TOPIC, JSON.toJSONString(command));

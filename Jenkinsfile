@@ -55,7 +55,6 @@ pipeline {
         }
 
         stage('Publish') {
-            when { branch 'master' }
             steps {
                 echo "Publishing artifacts..."
                 script {
@@ -64,12 +63,24 @@ pipeline {
                 }
             }
         }
-        //stage('Deploy') {
-        //    when { branch 'master' }
-        //    steps {
-        //        build job: 'Devops/motion-deployer', parameters: [string(name: 'artifactId', value: artifactId), string(name: 'build', value: buildTag)], wait: false
-        //    }
-        //}
+
+        stage('Deploy_master') {
+            when { branch 'master' }
+            steps {
+                script {
+                    build job: 'Devops/motion-deployer', parameters: [string(name: 'artifactId', value: artifactId), string(name: 'build', value: buildTag)], wait: false
+                }
+            }
+        }
+        
+        stage('Deploy_develop') {
+            when { branch 'develop' }
+            steps {
+                script {
+                    build job: 'Devops/motion-dev-deployer', parameters: [string(name: 'artifactId', value: artifactId), string(name: 'build', value: buildTag)], wait: false
+                }
+            }
+        }
     }
 
     post {
