@@ -10,6 +10,15 @@ public class ExchangeCommand implements Serializable {
     private String remark;
     private Long userId;
     private ProductType productType;
+    private String ipAddress;
+
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
 
     public String getType() {
         return type;
