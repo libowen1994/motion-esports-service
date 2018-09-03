@@ -149,6 +149,12 @@ public class MallOrder {
     private String exchangeResult;
 
     /**
+     * 附加字段
+     */
+    @Column(name = "attach")
+    private String attach;
+
+    /**
      * 获取主键
      *
      * @return id - 主键
@@ -604,5 +610,13 @@ public class MallOrder {
 
     public void setRemark(String remark) {
         this.remark = remark;
+    }
+
+    public String getAttach() {
+        return attach;
+    }
+
+    public void setAttach(String attach) {
+        this.attach = attach;
     }
 }
