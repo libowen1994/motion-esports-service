@@ -1,6 +1,5 @@
 package one.motion.mall.service.impl;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import one.motion.mall.config.KafkaConfig;
 import one.motion.mall.dto.*;
@@ -357,15 +356,18 @@ public class OrderServiceImpl implements IOrderService {
         return order;
     }
 
-    @KafkaListener(topics = KafkaConfig.MALL_EXCHANGE_NOTIFY_TOPIC)
+    @KafkaListener(topics = KafkaConfig.MALL_EXCHANGE_TOPIC)
     public void processExchangeNotify(ConsumerRecord<?, String> cr) {
         Optional<String> kafkaMessage = Optional.ofNullable(cr.value());
         if (kafkaMessage.isPresent()) {
             String message = kafkaMessage.get();
             logger.info("record =" + cr);
             logger.info("message =" + message);
-            ExchangeResult exchangeResult = JSON.parseObject(message, ExchangeResult.class);
-            this.exchangeNotify(exchangeResult);
+            JSONObject jsonObject = JSONObject.parseObject(message);
+            if (jsonObject.containsKey("type") && "event".equals(jsonObject.getString("type"))) {
+                ExchangeResult exchangeResult = jsonObject.toJavaObject(ExchangeResult.class);
+                this.exchangeNotify(exchangeResult);
+            }
         }
     }
 }

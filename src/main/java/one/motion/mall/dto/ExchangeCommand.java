@@ -11,6 +11,16 @@ public class ExchangeCommand implements Serializable {
     private Long userId;
     private ProductType productType;
 
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    private String type = "command";
+
     public ProductType getProductType() {
         return productType;
     }
