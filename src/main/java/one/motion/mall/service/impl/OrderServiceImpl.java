@@ -2,6 +2,8 @@ package one.motion.mall.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import one.motion.mall.config.KafkaConfig;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import one.motion.mall.dto.*;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.mapper.MallProductMapper;
@@ -16,19 +18,25 @@ import org.apache.commons.lang3.time.DateFormatUtils;
 import org.apache.kafka.clients.consumer.ConsumerRecord;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
+import tk.mybatis.mapper.entity.Example;
+import tk.mybatis.mapper.weekend.Weekend;
+import tk.mybatis.mapper.weekend.WeekendCriteria;
 
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Date;
 import java.util.Optional;
+import java.util.List;
 import java.util.UUID;
 
 @Service
 public class OrderServiceImpl implements IOrderService {
-    private final MallOrderMapper orderMapper;
+    @Autowired
+    private MallOrderMapper orderMapper;
     private final MallProductMapper productMapper;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -369,5 +377,36 @@ public class OrderServiceImpl implements IOrderService {
                 this.exchangeNotify(exchangeResult);
             }
         }
+    }
+
+    @Override
+    public PageInfo<MallOrder> selectPage(MallOrder order,Integer offset, Integer limit) {
+        int pageNum = offset / limit + 1;
+        PageHelper.startPage(pageNum,limit);
+
+        Weekend weekend = Weekend.of(MallOrder.class);
+        WeekendCriteria<MallOrder, Object> where = weekend.weekendCriteria();
+        if (!org.springframework.util.StringUtils.isEmpty(order.getKeywords())){
+            where.andLike(MallOrder :: getProductName, "%" + order.getKeywords() + "%");
+            where.orLike(MallOrder :: getCategoryCode, "%" + order.getKeywords() + "%");
+            where.orLike(MallOrder :: getRemark, "%" + order.getKeywords() + "%");
+        }
+
+        Example ex = new Example(MallOrder.class);
+        ex.and(where);
+        if (order.getPayStatus() != null){
+            ex.and().andEqualTo("payStatus",order.getPayStatus());
+        }
+        if (order.getExchangeStatus() != null){
+            ex.and().andEqualTo("exchangeStatus",order.getExchangeStatus());
+        }
+        if (order.getUserId() != null){
+            ex.and().andEqualTo("userId",order.getUserId());
+        }
+        if (!StringUtils.isEmpty(order.getProductId())){
+            ex.and().andEqualTo("productId",order.getProductId());
+        }
+        List<MallOrder> list = orderMapper.selectByExample(ex);
+        return new PageInfo<>(list);
     }
 }

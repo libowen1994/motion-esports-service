@@ -1,7 +1,7 @@
 package one.motion.mall.model;
 
-import java.util.Date;
 import javax.persistence.*;
+import java.util.Date;
 
 @Table(name = "mall_product_category")
 public class MallProductCategory {
@@ -42,6 +42,12 @@ public class MallProductCategory {
      * 启用/禁用
      */
     private Byte enabled;
+
+    /**
+     * 语系
+     */
+    @Column(name = "lang_code")
+    private String langCode;
 
     @Column(name = "created_at")
     private Date createdAt;
@@ -201,5 +207,13 @@ public class MallProductCategory {
      */
     public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
+    }
+
+    public String getLangCode() {
+        return langCode;
+    }
+
+    public void setLangCode(String langCode) {
+        this.langCode = langCode;
     }
 }
