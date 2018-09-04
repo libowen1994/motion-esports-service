@@ -25,6 +25,12 @@ mapper:
   not-empty: false
   identity: MYSQL
 
+pagehelper:
+  helperDialect: mysql
+  reasonable: true
+  supportMethodsArguments: true
+  params: count=countSql
+
 spring:
   profiles:
     active: dev
@@ -61,7 +67,7 @@ spring:
     driver-class-name: com.mysql.jdbc.Driver
     url: jdbc:mysql://${MYSQL_HOST:127.0.0.1}:3306/${DB_NAME:motion_mega_db}?useSSL=false&useUnicode=true&zeroDateTimeBehavior=convertToNull&characterEncoding=utf-8
     username: ${DB_USER:root}
-    password: ${DB_PASSWORD:root}
+    password: ${DB_PASSWORD:admin}
     hikari:
       connection-test-query: SELECT 1
       minimum-idle: 5
@@ -77,3 +83,7 @@ spring:
       cacheServerConfiguration: true
       elideSetAutoCommits: true
       maintainTimeStats: false
+
+logging:
+  level:
+    one.motion: trace

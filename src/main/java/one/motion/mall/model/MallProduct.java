@@ -1,7 +1,7 @@
 package one.motion.mall.model;
 
-import java.util.Date;
 import javax.persistence.*;
+import java.util.Date;
 
 @Table(name = "mall_product")
 public class MallProduct {
@@ -75,6 +75,11 @@ public class MallProduct {
      * 启用/禁用
      */
     private Byte enabled;
+
+    /**
+     * 语系
+     */
+    private String langCode;
 
     @Column(name = "created_at")
     private Date createdAt;
@@ -365,5 +370,13 @@ public class MallProduct {
      */
     public void setDescription(String description) {
         this.description = description == null ? null : description.trim();
+    }
+
+    public String getLangCode() {
+        return langCode;
+    }
+
+    public void setLangCode(String langCode) {
+        this.langCode = langCode;
     }
 }
