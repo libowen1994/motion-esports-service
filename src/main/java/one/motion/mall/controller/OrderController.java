@@ -40,9 +40,6 @@ public class OrderController {
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
 
-
-    private final IOrderService orderService;
-
     public OrderController(IOrderService orderService) {
         this.orderService = orderService;
     }

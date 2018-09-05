@@ -52,7 +52,7 @@ public class ProductCategoryServiceImpl implements IProductCategoryService {
             category.setCategoryCode(bean.getCategoryCode());
             List<MallProductCategory> select = categoryMapper.select(category);
             if (select != null && select.size() > 0) {
-                return 0;
+                return -1;
             }
             bean.setCreatedAt(new Date());
             bean.setUpdatedAt(new Date());

@@ -1,7 +1,6 @@
 package one.motion.mall.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import one.motion.mall.config.KafkaConfig;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import one.motion.mall.dto.*;
@@ -20,7 +19,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.kafka.annotation.KafkaListener;
 import org.springframework.stereotype.Service;
 import tk.mybatis.mapper.entity.Example;
 import tk.mybatis.mapper.weekend.Weekend;
@@ -29,8 +27,8 @@ import tk.mybatis.mapper.weekend.WeekendCriteria;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Date;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -364,7 +362,7 @@ public class OrderServiceImpl implements IOrderService {
         return order;
     }
 
-    @KafkaListener(topics = KafkaConfig.MALL_EXCHANGE_TOPIC)
+    //@KafkaListener(topics = KafkaConfig.MALL_EXCHANGE_TOPIC)
     public void processExchangeNotify(ConsumerRecord<?, String> cr) {
         Optional<String> kafkaMessage = Optional.ofNullable(cr.value());
         if (kafkaMessage.isPresent()) {
