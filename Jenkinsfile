@@ -77,7 +77,7 @@ pipeline {
             when { branch 'develop' }
             steps {
                 script {
-                    build job: 'Devops/motion-aliyun-dev-deployer', parameters: [string(name: 'artifactId', value: artifactId), string(name: 'build', value: buildTag)], wait: false
+                    build job: 'Devops/motion-dev-deployer', parameters: [string(name: 'artifactId', value: artifactId), string(name: 'build', value: buildTag)], wait: false
                 }
             }
         }
