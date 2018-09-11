@@ -79,6 +79,12 @@ public class MallProduct {
     private Float invoiceRate;
 
     /**
+     * 销量
+     */
+    @Column(name = "sales_volume")
+    private Integer salesVolume;
+
+    /**
      * 排序
      */
     private Long sort;
@@ -331,6 +337,24 @@ public class MallProduct {
      */
     public void setInvoiceRate(Float invoiceRate) {
         this.invoiceRate = invoiceRate;
+    }
+
+    /**
+     * 获取销量
+     *
+     * @return sales_volume - 销量
+     */
+    public Integer getSalesVolume() {
+        return salesVolume;
+    }
+
+    /**
+     * 设置销量
+     *
+     * @param salesVolume 销量
+     */
+    public void setSalesVolume(Integer salesVolume) {
+        this.salesVolume = salesVolume;
     }
 
     /**

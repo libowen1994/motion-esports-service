@@ -1,7 +1,7 @@
 package one.motion.mall.service;
 
-import com.github.pagehelper.PageInfo;
 import com.alibaba.fastjson.JSONObject;
+import com.github.pagehelper.PageInfo;
 import one.motion.mall.dto.ExchangeResult;
 import one.motion.mall.dto.PayChannel;
 import one.motion.mall.dto.PayType;
@@ -21,5 +21,5 @@ public interface IOrderService {
 
     MallOrder exchangeNotify(ExchangeResult result);
 
-    PageInfo<MallOrder> selectPage(MallOrder order,Integer offset, Integer limit);
+    PageInfo<MallOrder> selectPage(String keyword, MallOrder order, Integer offset, Integer limit);
 }

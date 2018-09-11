@@ -1,12 +1,10 @@
 package one.motion.mall.model;
 
-import javax.persistence.*;
 import java.util.Date;
+import javax.persistence.*;
 
 @Table(name = "mall_order")
 public class MallOrder {
-    @Transient
-    private String keywords;
     /**
      * 主键
      */
@@ -47,6 +45,12 @@ public class MallOrder {
      */
     @Column(name = "category_code")
     private String categoryCode;
+
+    /**
+     * 商品语言代码
+     */
+    @Column(name = "lang_code")
+    private String langCode;
 
     /**
      * ip
@@ -144,6 +148,11 @@ public class MallOrder {
      */
     private String remark;
 
+    /**
+     * 附加字段
+     */
+    private String attach;
+
     @Column(name = "created_at")
     private Date createdAt;
 
@@ -161,12 +170,6 @@ public class MallOrder {
      */
     @Column(name = "exchange_result")
     private String exchangeResult;
-
-    /**
-     * 附加字段
-     */
-    @Column(name = "attach")
-    private String attach;
 
     /**
      * 获取主键
@@ -292,6 +295,24 @@ public class MallOrder {
      */
     public void setCategoryCode(String categoryCode) {
         this.categoryCode = categoryCode == null ? null : categoryCode.trim();
+    }
+
+    /**
+     * 获取商品语言代码
+     *
+     * @return lang_code - 商品语言代码
+     */
+    public String getLangCode() {
+        return langCode;
+    }
+
+    /**
+     * 设置商品语言代码
+     *
+     * @param langCode 商品语言代码
+     */
+    public void setLangCode(String langCode) {
+        this.langCode = langCode == null ? null : langCode.trim();
     }
 
     /**
@@ -681,13 +702,4 @@ public class MallOrder {
     public void setExchangeResult(String exchangeResult) {
         this.exchangeResult = exchangeResult == null ? null : exchangeResult.trim();
     }
-
-    public String getKeywords() {
-        return keywords;
-    }
-
-    public void setKeywords(String keywords) {
-        this.keywords = keywords;
-    }
-
 }
