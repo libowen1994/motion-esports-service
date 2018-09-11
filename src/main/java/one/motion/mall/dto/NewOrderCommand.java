@@ -15,6 +15,17 @@ public class NewOrderCommand {
     @NotEmpty
     private String productId;
 
+    public String getIpAddress() {
+        return ipAddress;
+    }
+
+    public void setIpAddress(String ipAddress) {
+        this.ipAddress = ipAddress;
+    }
+
+    @NotEmpty
+    private String ipAddress;
+
     public Long getUserId() {
         return userId;
     }
