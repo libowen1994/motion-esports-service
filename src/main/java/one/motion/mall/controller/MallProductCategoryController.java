@@ -45,6 +45,8 @@ public class MallProductCategoryController {
             int ret = categoryService.saveOrUpdate(bean);
             if (ret == 1){
                 jsonResult = new JsonResult("保存成功");
+            }else if(ret == -1) {
+                jsonResult = new JsonResult(false,"该类型已存在");
             }else {
                 jsonResult = new JsonResult(false,"保存失败");
             }

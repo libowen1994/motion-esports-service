@@ -1,9 +1,9 @@
 package one.motion.mall.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import one.motion.mall.config.KafkaConfig;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import one.motion.mall.config.KafkaConfig;
 import one.motion.mall.dto.*;
 import one.motion.mall.mapper.MallOrderMapper;
 import one.motion.mall.mapper.MallProductMapper;
@@ -29,8 +29,8 @@ import tk.mybatis.mapper.weekend.WeekendCriteria;
 import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.util.Date;
-import java.util.Optional;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 @Service
@@ -380,31 +380,31 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public PageInfo<MallOrder> selectPage(MallOrder order,Integer offset, Integer limit) {
+    public PageInfo<MallOrder> selectPage(MallOrder order, Integer offset, Integer limit) {
         int pageNum = offset / limit + 1;
-        PageHelper.startPage(pageNum,limit);
+        PageHelper.startPage(pageNum, limit);
 
         Weekend weekend = Weekend.of(MallOrder.class);
         WeekendCriteria<MallOrder, Object> where = weekend.weekendCriteria();
-        if (!org.springframework.util.StringUtils.isEmpty(order.getKeywords())){
-            where.andLike(MallOrder :: getProductName, "%" + order.getKeywords() + "%");
-            where.orLike(MallOrder :: getCategoryCode, "%" + order.getKeywords() + "%");
-            where.orLike(MallOrder :: getRemark, "%" + order.getKeywords() + "%");
+        if (!org.springframework.util.StringUtils.isEmpty(order.getKeywords())) {
+            where.andLike(MallOrder::getProductName, "%" + order.getKeywords() + "%");
+            where.orLike(MallOrder::getCategoryCode, "%" + order.getKeywords() + "%");
+            where.orLike(MallOrder::getRemark, "%" + order.getKeywords() + "%");
         }
 
         Example ex = new Example(MallOrder.class);
         ex.and(where);
-        if (order.getPayStatus() != null){
-            ex.and().andEqualTo("payStatus",order.getPayStatus());
+        if (order.getPayStatus() != null) {
+            ex.and().andEqualTo("payStatus", order.getPayStatus());
         }
-        if (order.getExchangeStatus() != null){
-            ex.and().andEqualTo("exchangeStatus",order.getExchangeStatus());
+        if (order.getExchangeStatus() != null) {
+            ex.and().andEqualTo("exchangeStatus", order.getExchangeStatus());
         }
-        if (order.getUserId() != null){
-            ex.and().andEqualTo("userId",order.getUserId());
+        if (order.getUserId() != null) {
+            ex.and().andEqualTo("userId", order.getUserId());
         }
-        if (!StringUtils.isEmpty(order.getProductId())){
-            ex.and().andEqualTo("productId",order.getProductId());
+        if (!StringUtils.isEmpty(order.getProductId())) {
+            ex.and().andEqualTo("productId", order.getProductId());
         }
         List<MallOrder> list = orderMapper.selectByExample(ex);
         return new PageInfo<>(list);

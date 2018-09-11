@@ -24,10 +24,6 @@ import javax.validation.Valid;
 public class OrderController {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public OrderController(IOrderService orderService) {
-        this.orderService = orderService;
-    }
-
     @RequestMapping
     public ResponseEntity<PageInfo> getList(MallOrder order, Integer offset, Integer limit) {
         if (offset == null) {
@@ -43,6 +39,9 @@ public class OrderController {
 
     private final IOrderService orderService;
 
+    public OrderController(IOrderService orderService) {
+        this.orderService = orderService;
+    }
 
     @PostMapping("/create")
     public JSONObject create(@Valid NewOrderCommand command, HttpServletRequest request) {

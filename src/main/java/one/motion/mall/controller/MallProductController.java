@@ -43,6 +43,8 @@ public class MallProductController {
             int i = productService.save(bean);
             if (i > 0){
                 jsonResult = new JsonResult("保存成功");
+            }else if(i == -1){
+                jsonResult = new JsonResult(false,"请选择商品类型");
             }else {
                 jsonResult = new JsonResult(false,"保存失败");
             }

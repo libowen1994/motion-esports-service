@@ -58,6 +58,9 @@ public class ProductServiceImpl implements IProductService {
         if (code != null){
             split = code.split("#");
         }
+        if (split == null || split.length != 2 || "defaultCode".equals(split[0])){
+            return -1;
+        }
         if (bean.getId() == null){
             bean.setCategoryCode(split[0]);
             bean.setLangCode(split[1]);
