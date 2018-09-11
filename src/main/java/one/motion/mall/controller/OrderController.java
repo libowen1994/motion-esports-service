@@ -7,7 +7,6 @@ import one.motion.mall.dto.PayType;
 import one.motion.mall.dto.ToPayCommand;
 import one.motion.mall.model.MallOrder;
 import one.motion.mall.service.IOrderService;
-import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -16,7 +15,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 
 @RestController
@@ -44,10 +42,9 @@ public class OrderController {
     }
 
     @PostMapping("/create")
-    public JSONObject create(@Valid NewOrderCommand command, HttpServletRequest request) {
-        String ip = request.getHeader("x-real-ip");
+    public JSONObject create(@Valid NewOrderCommand command) {
         command.setPayType(PayType.SHB);
-        String orderId = orderService.checkout(command.getUserId(), StringUtils.defaultString(ip, "127.0.0.1"), command.getAttach(), command.getProductId(), command.getAmount(), command.getPayType());
+        String orderId = orderService.checkout(command.getUserId(), command.getIpAddress(), command.getAttach(), command.getProductId(), command.getAmount(), command.getPayType());
         JSONObject json = new JSONObject();
         json.put("orderId", orderId);
         return json;

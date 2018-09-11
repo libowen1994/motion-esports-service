@@ -373,7 +373,8 @@ public class OrderServiceImpl implements IOrderService {
                 .andEqualTo("product_id", order.getProductId())
                 .andEqualTo("category_code", order.getCategoryCode())
                 .andEqualTo("pay_status", PaymentStatus.PAID.getCode());
-        int count = orderMapper.selectCountByExample(example2);
+        List<MallOrder> orders = orderMapper.selectByExample(example2);
+        int count = orders.stream().mapToInt(MallOrder::getAmount).sum();
         MallProduct product = new MallProduct();
         product.setSalesVolume(count);
         productMapper.updateByExampleSelective(product, example);
