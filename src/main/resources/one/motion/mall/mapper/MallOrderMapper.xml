@@ -12,6 +12,7 @@
     <result column="type" jdbcType="TINYINT" property="type" />
     <result column="product_name" jdbcType="VARCHAR" property="productName" />
     <result column="category_code" jdbcType="VARCHAR" property="categoryCode" />
+    <result column="lang_code" jdbcType="VARCHAR" property="langCode" />
     <result column="ip_address" jdbcType="VARCHAR" property="ipAddress" />
     <result column="product_id" jdbcType="VARCHAR" property="productId" />
     <result column="amount" jdbcType="INTEGER" property="amount" />

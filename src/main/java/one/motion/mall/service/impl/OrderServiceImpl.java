@@ -105,6 +105,7 @@ public class OrderServiceImpl implements IOrderService {
         order.setProductId(product.getProductId());
         order.setProductName(product.getName());
         order.setPayType(payType.getCode().byteValue());
+        order.setLangCode(product.getLangCode());
         order.setAttach(attach);
         order.setIpAddress(ipAddress);
         BigDecimal total = BigDecimal.valueOf(amount).multiply(BigDecimal.valueOf(product.getPrice()));
@@ -361,6 +362,20 @@ public class OrderServiceImpl implements IOrderService {
             throw new RuntimeException("unknown_order_error");
         }
         order = updateExchangeStatus(order, result);
+        Example example = new Example(MallProduct.class);
+        Example example2 = new Example(MallOrder.class);
+        example.and()
+                .andEqualTo("lang_code", order.getLangCode())
+                .andEqualTo("product_id", order.getProductId())
+                .andEqualTo("category_code", order.getCategoryCode());
+        example2.and()
+                .andEqualTo("lang_code", order.getLangCode())
+                .andEqualTo("product_id", order.getProductId())
+                .andEqualTo("category_code", order.getCategoryCode());
+        int count = orderMapper.selectCountByExample(example2);
+        MallProduct product = new MallProduct();
+        product.setSalesVolume(count);
+        productMapper.updateByExampleSelective(product, example);
         return order;
     }
 
@@ -380,16 +395,16 @@ public class OrderServiceImpl implements IOrderService {
     }
 
     @Override
-    public PageInfo<MallOrder> selectPage(MallOrder order, Integer offset, Integer limit) {
+    public PageInfo<MallOrder> selectPage(String keyword, MallOrder order, Integer offset, Integer limit) {
         int pageNum = offset / limit + 1;
         PageHelper.startPage(pageNum, limit);
 
         Weekend weekend = Weekend.of(MallOrder.class);
         WeekendCriteria<MallOrder, Object> where = weekend.weekendCriteria();
-        if (!org.springframework.util.StringUtils.isEmpty(order.getKeywords())) {
-            where.andLike(MallOrder::getProductName, "%" + order.getKeywords() + "%");
-            where.orLike(MallOrder::getCategoryCode, "%" + order.getKeywords() + "%");
-            where.orLike(MallOrder::getRemark, "%" + order.getKeywords() + "%");
+        if (!org.springframework.util.StringUtils.isEmpty(keyword)) {
+            where.andLike(MallOrder::getProductName, "%" + keyword + "%");
+            where.orLike(MallOrder::getCategoryCode, "%" + keyword + "%");
+            where.orLike(MallOrder::getRemark, "%" + keyword + "%");
         }
 
         Example ex = new Example(MallOrder.class);

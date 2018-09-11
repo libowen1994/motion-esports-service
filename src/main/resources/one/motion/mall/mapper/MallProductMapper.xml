@@ -18,6 +18,7 @@
     <result column="currency" jdbcType="CHAR" property="currency" />
     <result column="discount" jdbcType="REAL" property="discount" />
     <result column="invoice_rate" jdbcType="REAL" property="invoiceRate" />
+    <result column="sales_volume" jdbcType="INTEGER" property="salesVolume" />
     <result column="sort" jdbcType="BIGINT" property="sort" />
     <result column="enabled" jdbcType="TINYINT" property="enabled" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />

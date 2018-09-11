@@ -25,14 +25,14 @@ public class OrderController {
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
     @RequestMapping
-    public ResponseEntity<PageInfo> getList(MallOrder order, Integer offset, Integer limit) {
+    public ResponseEntity<PageInfo> getList(String keywords, MallOrder order, Integer offset, Integer limit) {
         if (offset == null) {
             offset = 0;
         }
         if (limit == null || limit <= 0) {
             limit = 20;
         }
-        PageInfo<MallOrder> data = orderService.selectPage(order, offset, limit);
+        PageInfo<MallOrder> data = orderService.selectPage(keywords, order, offset, limit);
         return new ResponseEntity<>(data, HttpStatus.OK);
     }
 
