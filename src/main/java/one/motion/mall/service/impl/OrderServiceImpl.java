@@ -371,7 +371,8 @@ public class OrderServiceImpl implements IOrderService {
         example2.and()
                 .andEqualTo("lang_code", order.getLangCode())
                 .andEqualTo("product_id", order.getProductId())
-                .andEqualTo("category_code", order.getCategoryCode());
+                .andEqualTo("category_code", order.getCategoryCode())
+                .andEqualTo("pay_status", PaymentStatus.PAID.getCode());
         int count = orderMapper.selectCountByExample(example2);
         MallProduct product = new MallProduct();
         product.setSalesVolume(count);
