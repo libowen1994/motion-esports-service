@@ -8,5 +8,5 @@ IPS_MER_CODE: 1
 IPS_MER_NAME: 1
 IPS_MER_ACCOUNT: 1
 IPS_MD5_KEY: 1
-PAYMENT_DOMAIN: https://www-test3367.motion.one
-PAYMENT_CALLBACK_DOMAIN: https://api-test3367.motion.one
+PAYMENT_DOMAIN: https://www.motion.one
+PAYMENT_CALLBACK_DOMAIN: https://api.motion.one
