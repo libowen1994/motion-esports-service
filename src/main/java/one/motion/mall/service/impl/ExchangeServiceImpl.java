@@ -7,7 +7,9 @@ import one.motion.mall.dto.ExchangeResult;
 import one.motion.mall.dto.ExchangeStatus;
 import one.motion.mall.dto.ProductType;
 import one.motion.mall.mapper.MallOrderMapper;
+import one.motion.mall.mapper.MallProductMapper;
 import one.motion.mall.model.MallOrder;
+import one.motion.mall.model.MallProduct;
 import one.motion.mall.service.IExchangeService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -15,17 +17,20 @@ import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 
 @Service
 public class ExchangeServiceImpl implements IExchangeService {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
     private final MallOrderMapper orderMapper;
+    private final MallProductMapper productMapper;
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
-    public ExchangeServiceImpl(KafkaTemplate<String, String> kafkaTemplate, MallOrderMapper orderMapper) {
+    public ExchangeServiceImpl(KafkaTemplate<String, String> kafkaTemplate, MallOrderMapper orderMapper, MallProductMapper productMapper) {
         this.kafkaTemplate = kafkaTemplate;
         this.orderMapper = orderMapper;
+        this.productMapper = productMapper;
     }
 
 
@@ -37,6 +42,15 @@ public class ExchangeServiceImpl implements IExchangeService {
         if (order == null) {
             throw new RuntimeException("unknown_order_error");
         }
+        MallProduct product = new MallProduct();
+        product.setProductId(order.getProductId());
+        product.setCategoryCode(order.getCategoryCode());
+        List<MallProduct> products = productMapper.select(product);
+        if (products != null && products.size() > 0) {
+            product = products.get(0);
+        } else {
+            product.setInvoiceRate(0f);
+        }
         ExchangeCommand command = new ExchangeCommand();
         command.setAmount(order.getAmount());
         command.setProductId(order.getProductId());
@@ -44,6 +58,7 @@ public class ExchangeServiceImpl implements IExchangeService {
         command.setAttach(order.getAttach());
         command.setRemark(order.getRemark());
         command.setUserId(order.getUserId());
+        command.setInvoice(product.getInvoiceRate());
         command.setProductType(ProductType.valueOf(order.getType()));
         command.setIpAddress(order.getIpAddress());
         ExchangeResult exchangeResult = new ExchangeResult();

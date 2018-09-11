@@ -12,10 +12,12 @@
     <result column="name" jdbcType="VARCHAR" property="name" />
     <result column="short_desc" jdbcType="VARCHAR" property="shortDesc" />
     <result column="category_code" jdbcType="VARCHAR" property="categoryCode" />
+    <result column="lang_code" jdbcType="VARCHAR" property="langCode" />
     <result column="product_id" jdbcType="VARCHAR" property="productId" />
     <result column="price" jdbcType="DOUBLE" property="price" />
     <result column="currency" jdbcType="CHAR" property="currency" />
     <result column="discount" jdbcType="REAL" property="discount" />
+    <result column="invoice_rate" jdbcType="REAL" property="invoiceRate" />
     <result column="sort" jdbcType="BIGINT" property="sort" />
     <result column="enabled" jdbcType="TINYINT" property="enabled" />
     <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />

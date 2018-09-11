@@ -10,6 +10,7 @@ public class ExchangeCommand implements Serializable {
     private String remark;
     private Long userId;
     private ProductType productType;
+    private Float invoice;
     private String ipAddress;
 
     public String getIpAddress() {
@@ -84,5 +85,13 @@ public class ExchangeCommand implements Serializable {
 
     public void setUserId(Long userId) {
         this.userId = userId;
+    }
+
+    public Float getInvoice() {
+        return invoice;
+    }
+
+    public void setInvoice(Float invoice) {
+        this.invoice = invoice;
     }
 }

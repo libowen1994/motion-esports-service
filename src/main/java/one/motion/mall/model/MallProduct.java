@@ -1,7 +1,7 @@
 package one.motion.mall.model;
 
-import javax.persistence.*;
 import java.util.Date;
+import javax.persistence.*;
 
 @Table(name = "mall_product")
 public class MallProduct {
@@ -46,6 +46,12 @@ public class MallProduct {
     private String categoryCode;
 
     /**
+     * 语言代码（zh_CN,zh_TW...）
+     */
+    @Column(name = "lang_code")
+    private String langCode;
+
+    /**
      * 商品代码
      */
     @Column(name = "product_id")
@@ -67,6 +73,12 @@ public class MallProduct {
     private Float discount;
 
     /**
+     * 发票点数
+     */
+    @Column(name = "invoice_rate")
+    private Float invoiceRate;
+
+    /**
      * 排序
      */
     private Long sort;
@@ -75,11 +87,6 @@ public class MallProduct {
      * 启用/禁用
      */
     private Byte enabled;
-
-    /**
-     * 语系
-     */
-    private String langCode;
 
     @Column(name = "created_at")
     private Date createdAt;
@@ -219,6 +226,24 @@ public class MallProduct {
     }
 
     /**
+     * 获取语言代码（zh_CN,zh_TW...）
+     *
+     * @return lang_code - 语言代码（zh_CN,zh_TW...）
+     */
+    public String getLangCode() {
+        return langCode;
+    }
+
+    /**
+     * 设置语言代码（zh_CN,zh_TW...）
+     *
+     * @param langCode 语言代码（zh_CN,zh_TW...）
+     */
+    public void setLangCode(String langCode) {
+        this.langCode = langCode == null ? null : langCode.trim();
+    }
+
+    /**
      * 获取商品代码
      *
      * @return product_id - 商品代码
@@ -288,6 +313,24 @@ public class MallProduct {
      */
     public void setDiscount(Float discount) {
         this.discount = discount;
+    }
+
+    /**
+     * 获取发票点数
+     *
+     * @return invoice_rate - 发票点数
+     */
+    public Float getInvoiceRate() {
+        return invoiceRate;
+    }
+
+    /**
+     * 设置发票点数
+     *
+     * @param invoiceRate 发票点数
+     */
+    public void setInvoiceRate(Float invoiceRate) {
+        this.invoiceRate = invoiceRate;
     }
 
     /**
@@ -370,13 +413,5 @@ public class MallProduct {
      */
     public void setDescription(String description) {
         this.description = description == null ? null : description.trim();
-    }
-
-    public String getLangCode() {
-        return langCode;
-    }
-
-    public void setLangCode(String langCode) {
-        this.langCode = langCode;
     }
 }

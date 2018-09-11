@@ -46,7 +46,7 @@
               <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
           </table>-->
         <!--single table generation with custom Object Name-->
-        <table tableName="mall_order">
+        <table tableName="mall_product">
             <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
         </table>
     </context>
