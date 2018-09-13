@@ -27,16 +27,16 @@
             <property name="forceBigDecimals" value="false"/>
         </javaTypeResolver>
 
-        <javaModelGenerator targetPackage="one.motion.mall.model" targetProject="${src_main_java}">
+        <javaModelGenerator targetPackage="one.motion.esports.model" targetProject="${src_main_java}">
             <property name="enableSubPackages" value="true"/>
             <property name="trimStrings" value="true"/>
         </javaModelGenerator>
 
-        <sqlMapGenerator targetPackage="one.motion.mall.mapper" targetProject="${src_main_resources}">
+        <sqlMapGenerator targetPackage="one.motion.esports.mapper" targetProject="${src_main_resources}">
             <property name="enableSubPackages" value="true"/>
         </sqlMapGenerator>
 
-        <javaClientGenerator targetPackage="one.motion.mall.mapper" targetProject="${src_main_java}"
+        <javaClientGenerator targetPackage="one.motion.esports.mapper" targetProject="${src_main_java}"
                              type="XMLMAPPER">
             <property name="enableSubPackages" value="true"/>
         </javaClientGenerator>
@@ -46,8 +46,8 @@
               <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
           </table>-->
         <!--single table generation with custom Object Name-->
-        <table tableName="mall_order">
+        <!--<table tableName="mall_order">
             <generatedKey column="id" sqlStatement="Mysql" identity="true"/>
-        </table>
+        </table>-->
     </context>
 </generatorConfiguration>

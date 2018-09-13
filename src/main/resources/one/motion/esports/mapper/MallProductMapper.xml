@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="one.motion.esports.mapper.MallProductMapper">
+  <resultMap id="BaseResultMap" type="one.motion.esports.model.MallProduct">
+    <!--
+      WARNING - @mbg.generated
+    -->
+    <id column="id" jdbcType="BIGINT" property="id" />
+    <result column="uuid" jdbcType="CHAR" property="uuid" />
+    <result column="icon_url" jdbcType="VARCHAR" property="iconUrl" />
+    <result column="type" jdbcType="TINYINT" property="type" />
+    <result column="name" jdbcType="VARCHAR" property="name" />
+    <result column="short_desc" jdbcType="VARCHAR" property="shortDesc" />
+    <result column="category_code" jdbcType="VARCHAR" property="categoryCode" />
+    <result column="lang_code" jdbcType="VARCHAR" property="langCode" />
+    <result column="product_id" jdbcType="VARCHAR" property="productId" />
+    <result column="price" jdbcType="DOUBLE" property="price" />
+    <result column="currency" jdbcType="CHAR" property="currency" />
+    <result column="discount" jdbcType="REAL" property="discount" />
+    <result column="invoice_rate" jdbcType="REAL" property="invoiceRate" />
+    <result column="sales_volume" jdbcType="INTEGER" property="salesVolume" />
+    <result column="sort" jdbcType="BIGINT" property="sort" />
+    <result column="enabled" jdbcType="TINYINT" property="enabled" />
+    <result column="created_at" jdbcType="TIMESTAMP" property="createdAt" />
+    <result column="updated_at" jdbcType="TIMESTAMP" property="updatedAt" />
+    <result column="description" jdbcType="LONGVARCHAR" property="description" />
+  </resultMap>
+</mapper>

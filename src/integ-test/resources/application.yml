@@ -15,7 +15,7 @@ grpc:
 mybatis:
   configuration:
     map-underscore-to-camel-case: true
-  type-aliases-package: one.motion.mall.model
+  type-aliases-package: one.motion.esports.model
   mapper-locations: classpath:one.motion.**.mapper/*.xml
 
 mapper:
@@ -28,13 +28,13 @@ mapper:
 logging:
   level:
     tk.mybatis: debug
-    one.motion.mall.mapper: debug
+    one.motion.esports.mapper: debug
 
 spring:
   profiles:
     active: dev
   application:
-    name: motion-mall
+    name: motion-esports
   messages:
     basename: i18n/messages
     encoding: UTF-8
@@ -56,7 +56,7 @@ spring:
       key-serializer: org.apache.kafka.common.serialization.StringSerializer
       value-serializer: org.apache.kafka.common.serialization.StringSerializer
     consumer:
-      group-id: motion-mall-service
+      group-id: motion-esports-service
       auto-offset-reset: earliest
       enable-auto-commit: true
       auto-commit-interval: 100

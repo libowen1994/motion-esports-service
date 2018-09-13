@@ -112,7 +112,7 @@ docker-compose logs -f maindb
 
 # 組態設定
 ### health endpoint
-```http://mall-service:9090/actuator/health```
+```http://esports-service:9090/actuator/health```
 ### 环境变量
 name           | description
 ---            | ---

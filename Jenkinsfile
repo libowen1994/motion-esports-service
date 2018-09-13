@@ -1,5 +1,5 @@
 def buildTag = 'UNKNOWN'
-def artifactId = 'mall-service'
+def artifactId = 'esports-service'
 pipeline {
     environment {
          ROOM_NAME = '中控制-Motion平台'
